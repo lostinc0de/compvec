@@ -20,11 +20,22 @@ where
 {
     /// Returns the maximum value and the new stride in bits, such that val fits.
     fn compute_max_value_and_stride(val: T) -> (T, u64) {
+        // Define the number of bits without the sign bit
+        let n_bits_filled = if T::SIGNED {
+            T::N_BITS - 1
+        } else {
+            T::N_BITS
+        };
         let mut stride = 1;
         let mut max = (T::ONE << stride) - T::ONE;
         while max < val.abs() {
             stride += 1;
-            max = (T::ONE << stride) - T::ONE;
+            // Avoid overflow with shift left
+            if stride < n_bits_filled {
+                max = (T::ONE << stride) - T::ONE;
+            } else {
+                max = T::MAX;
+            }
         }
         // Reserve one additional bit for the sign if necessary
         if T::SIGNED {
@@ -93,13 +104,9 @@ where
     
     /// Returns the mask filled with ones from start_bit to end_bit.
     pub fn mask(&self, start_bit: usize, end_bit: usize) -> U {
-        //let shift = end_bit - start_bit + 1;
-        //let mask = (T::ONE << shift) - T::ONE;
-        //mask.into_trunc() << start_bit
         if end_bit < start_bit {
             return U::ZERO;
         }
-        //println!("{start_bit} {end_bit}");
         let ind = end_bit - start_bit;
         if ind >= self.masks.len() {
             return U::ZERO;
@@ -134,17 +141,13 @@ where
         // Shift the first element to the right
         let mut ret = T::from_trunc(self.values[start_el] >> start_bit);
         if start_el == end_el {
-        assert!(start_bit < end_bit);
             // We just need to mask out the unnecessary bits after the last bit
             let mask = if T::SIGNED {
                 // Don't include the signed bit
-                //(T::ONE << (end_bit - start_bit)) - T::ONE
                 self.mask(0, end_bit - start_bit - 1)
             } else {
-                //(T::ONE << (end_bit - start_bit + 1)) - T::ONE
                 self.mask(0, end_bit - start_bit)
             };
-            //ret &= mask;
             ret &= T::from_trunc(mask);
         } else {
             // Iterate over all elements between the starting and ending element
@@ -158,18 +161,14 @@ where
             let shift = (U::N_BITS - start_bit) + n_elements_full * U::N_BITS;
             let mask = if T::SIGNED {
                 // Don't include the signed bit
-                //(T::ONE << end_bit) - T::ONE
-        //assert!(end_bit > 0);
                 if end_bit > 0 {
                     self.mask(0, end_bit - 1)
                 } else {
                     U::ZERO
                 }
             } else {
-                //(T::ONE << (end_bit + 1)) - T::ONE
                 self.mask(0, end_bit)
             };
-            //ret |= (T::from_trunc(self.values[end_el]) & mask) << shift;
             ret |= T::from_trunc(self.values[end_el] & mask) << shift;
         }
         // Add sign if necessary
@@ -188,15 +187,11 @@ where
         let val_abs = val.abs();
         if start_el == end_el {
             // Reset the bits from the previous value
-            //let mask = (T::ONE << (end_bit - start_bit + 1)) - T::ONE;
-            //let mask_reset = !(mask.into_trunc() << start_bit);
             let mask_reset = self.mask_inverse(start_bit, end_bit);
             self.values[start_el] &= mask_reset;
             self.values[start_el] |= val_abs.into_trunc() << start_bit;
         } else {
             // Reset previous values first
-            //let mask = (T::ONE << (U::N_BITS - start_bit)) - T::ONE;
-            //let mask_reset = !(mask.into_trunc() << start_bit);
             let mask_reset = self.mask_inverse(start_bit, U::N_BITS - 1);
             self.values[start_el] &= mask_reset;
             // The first entry does not have to be masked, since it will be truncated
@@ -209,8 +204,6 @@ where
                 self.values[ind_el] = (val_abs >> shift).into_trunc();
             }
             // Reset previous values first
-            //let mask = (T::ONE << (end_bit + 1)) - T::ONE;
-            //let mask_reset = !mask.into_trunc();
             let mask_reset = self.mask_inverse(0, end_bit);
             self.values[end_el] &= mask_reset;
             // Mask the last element up to the ending bit
@@ -226,6 +219,7 @@ where
     }
     
     fn push(&mut self, val: T) {
+        // Compute the index of the last element, if value gets pushed
         let end_bit_global = (self.n as u64 + 1) * self.stride_bits - 1;
         let end_el = (end_bit_global / U::N_BITS_U64) as usize;
         self.values.resize(end_el + 1, U::ZERO);
@@ -307,7 +301,7 @@ mod tests {
             assert_eq!(bit_vec.get(i), bit_vec_ref.get(i));
         }
         // Test iterator
-        assert_eq!(bit_vec.iterate().sum::<T>(), bit_vec_ref.iterate().sum());
+        assert_eq!(bit_vec.iterate().max(), bit_vec_ref.iterate().max());
         for (v0, v1) in bit_vec.iterate().zip(bit_vec_ref.iterate()) {
             assert_eq!(v0, v1);
         }
@@ -341,212 +335,263 @@ mod tests {
     }
     
     #[test]
-    fn bit_vec() {
+    fn bit_vec_u16_u8() {
         bit_vec_gen::<u16, u8>(1_000, 1, 0);
         bit_vec_gen::<u16, u8>(1_000, 2, 0);
         bit_vec_gen::<u16, u8>(1_000, 4, 0);
         bit_vec_gen::<u16, u8>(1_000, 8, 0);
         bit_vec_gen::<u16, u8>(1_000, 16, 0);
+        bit_vec_gen::<u16, u8>(1_000, 32, 0);
+        bit_vec_gen::<u16, u8>(1_000, 128, 0);
+        bit_vec_gen::<u16, u8>(4_000, 192, 0);
+    }
+
+    #[test]
+    fn bit_vec_u32_u8() {
         bit_vec_gen::<u32, u8>(1_000, 1, 0);
         bit_vec_gen::<u32, u8>(1_000, 2, 0);
         bit_vec_gen::<u32, u8>(1_000, 4, 0);
         bit_vec_gen::<u32, u8>(1_000, 8, 0);
         bit_vec_gen::<u32, u8>(1_000, 16, 0);
-        bit_vec_gen::<u32, u8>(10_000, 32, 0);
-        bit_vec_gen::<u32, u8>(10_000, 64, 0);
-        bit_vec_gen::<u32, u8>(10_000, 128, 0);
-        bit_vec_gen::<u32, u8>(100_000, 32, 0);
-        bit_vec_gen::<u32, u8>(100_000, 64, 0);
-        bit_vec_gen::<u32, u8>(100_000, 128, 0);
-        bit_vec_gen::<u32, u8>(1_000_000, 32, 0);
-        bit_vec_gen::<u32, u8>(1_000_000, 64, 0);
-        bit_vec_gen::<u32, u8>(1_000_000, 128, 0);
+        bit_vec_gen::<u32, u8>(1_000, 128, 0);
+        bit_vec_gen::<u32, u8>(4_000, 256, 0);
+        bit_vec_gen::<u32, u8>(4_000, 512, 0);
+        bit_vec_gen::<u32, u8>(4_000, 1024, 0);
+        bit_vec_gen::<u32, u8>(16_000, 2048, 0);
+        bit_vec_gen::<u32, u8>(16_000, 4096, 0);
+        bit_vec_gen::<u32, u8>(16_000, 65_000, 0);
+        bit_vec_gen::<u32, u8>(128_000, 520_000, 0);
+        bit_vec_gen::<u32, u8>(128_000, 1_000_000, 0);
+        bit_vec_gen::<u32, u8>(128_000, 8_000_000, 0);
+    }
+
+    #[test]
+    fn bit_vec_u32_u16() {
         bit_vec_gen::<u32, u16>(1_000, 1, 0);
         bit_vec_gen::<u32, u16>(1_000, 2, 0);
         bit_vec_gen::<u32, u16>(1_000, 4, 0);
         bit_vec_gen::<u32, u16>(1_000, 8, 0);
         bit_vec_gen::<u32, u16>(1_000, 16, 0);
-        bit_vec_gen::<u32, u16>(10_000, 32, 0);
-        bit_vec_gen::<u32, u16>(10_000, 64, 0);
-        bit_vec_gen::<u32, u16>(10_000, 128, 0);
-        bit_vec_gen::<u32, u16>(100_000, 32, 0);
-        bit_vec_gen::<u32, u16>(100_000, 64, 0);
-        bit_vec_gen::<u32, u16>(100_000, 128, 0);
-        bit_vec_gen::<u32, u16>(1_000_000, 32, 0);
-        bit_vec_gen::<u32, u16>(1_000_000, 64, 0);
-        bit_vec_gen::<u32, u16>(1_000_000, 128, 0);
-        bit_vec_gen::<i16, u8>(1_000, 1, -500);
-        bit_vec_gen::<i16, u8>(1_000, 2, -500);
-        bit_vec_gen::<i16, u8>(1_000, 4, -500);
-        bit_vec_gen::<i16, u8>(1_000, 8, -500);
-        bit_vec_gen::<i16, u8>(1_000, 16, -500);
-        bit_vec_gen::<i32, u8>(1_000, 1, -500);
-        bit_vec_gen::<i32, u8>(1_000, 2, -500);
-        bit_vec_gen::<i32, u8>(1_000, 4, -500);
-        bit_vec_gen::<i32, u8>(1_000, 8, -500);
-        bit_vec_gen::<i32, u8>(1_000, 16, -500);
-        bit_vec_gen::<i32, u8>(10_000, 32, -5_000);
-        bit_vec_gen::<i32, u8>(10_000, 64, -5_000);
-        bit_vec_gen::<i32, u8>(10_000, 128, -5_000);
-        bit_vec_gen::<i32, u8>(100_000, 32, -50_000);
-        bit_vec_gen::<i32, u8>(100_000, 64, -50_000);
-        bit_vec_gen::<i32, u8>(100_000, 128, -50_000);
-        bit_vec_gen::<i32, u8>(1_000_000, 32, -500_000);
-        bit_vec_gen::<i32, u8>(1_000_000, 64, -500_000);
-        bit_vec_gen::<i32, u8>(1_000_000, 128, -500_000);
-        bit_vec_gen::<i32, u16>(1_000, 1, -500);
-        bit_vec_gen::<i32, u16>(1_000, 2, -500);
-        bit_vec_gen::<i32, u16>(1_000, 4, -500);
-        bit_vec_gen::<i32, u16>(1_000, 8, -500);
-        bit_vec_gen::<i32, u16>(1_000, 16, -500);
-        bit_vec_gen::<i32, u16>(10_000, 32, -5_000);
-        bit_vec_gen::<i32, u16>(10_000, 64, -5_000);
-        bit_vec_gen::<i32, u16>(10_000, 128, -5_000);
-        bit_vec_gen::<i32, u16>(100_000, 32, -50_000);
-        bit_vec_gen::<i32, u16>(100_000, 64, -50_000);
-        bit_vec_gen::<i32, u16>(100_000, 128, -50_000);
-        bit_vec_gen::<i32, u16>(1_000_000, 32, -500_000);
-        bit_vec_gen::<i32, u16>(1_000_000, 64, -500_000);
-        bit_vec_gen::<i32, u16>(1_000_000, 128, -500_000);
-        bit_vec_gen::<usize, u8>(1_000, 1, 0);
-        bit_vec_gen::<usize, u8>(1_000, 2, 0);
-        bit_vec_gen::<usize, u8>(1_000, 4, 0);
-        bit_vec_gen::<usize, u8>(1_000, 8, 0);
-        bit_vec_gen::<usize, u8>(1_000, 16, 0);
-        bit_vec_gen::<usize, u8>(10_000, 32, 0);
-        bit_vec_gen::<usize, u8>(10_000, 64, 0);
-        bit_vec_gen::<usize, u8>(10_000, 128, 0);
-        bit_vec_gen::<usize, u8>(100_000, 32, 0);
-        bit_vec_gen::<usize, u8>(100_000, 64, 0);
-        bit_vec_gen::<usize, u8>(100_000, 128, 0);
-        bit_vec_gen::<usize, u8>(1_000_000, 32, 0);
-        bit_vec_gen::<usize, u8>(1_000_000, 64, 0);
-        bit_vec_gen::<usize, u8>(1_000_000, 128, 0);
-        bit_vec_gen::<usize, u16>(1_000, 1, 0);
-        bit_vec_gen::<usize, u16>(1_000, 2, 0);
-        bit_vec_gen::<usize, u16>(1_000, 4, 0);
-        bit_vec_gen::<usize, u16>(1_000, 8, 0);
-        bit_vec_gen::<usize, u16>(1_000, 16, 0);
-        bit_vec_gen::<usize, u16>(10_000, 32, 0);
-        bit_vec_gen::<usize, u16>(10_000, 64, 0);
-        bit_vec_gen::<usize, u16>(10_000, 128, 0);
-        bit_vec_gen::<usize, u16>(100_000, 32, 0);
-        bit_vec_gen::<usize, u16>(100_000, 64, 0);
-        bit_vec_gen::<usize, u16>(100_000, 128, 0);
-        bit_vec_gen::<usize, u16>(1_000_000, 32, 0);
-        bit_vec_gen::<usize, u16>(1_000_000, 64, 0);
-        bit_vec_gen::<usize, u16>(1_000_000, 128, 0);
-        bit_vec_gen::<isize, u8>(1_000, 1, -500);
-        bit_vec_gen::<isize, u8>(1_000, 2, -500);
-        bit_vec_gen::<isize, u8>(1_000, 4, -500);
-        bit_vec_gen::<isize, u8>(1_000, 8, -500);
-        bit_vec_gen::<isize, u8>(1_000, 16, -500);
-        bit_vec_gen::<isize, u8>(10_000, 32, -5_000);
-        bit_vec_gen::<isize, u8>(10_000, 64, -5_000);
-        bit_vec_gen::<isize, u8>(10_000, 128, -5_000);
-        bit_vec_gen::<isize, u8>(100_000, 32, -50_000);
-        bit_vec_gen::<isize, u8>(100_000, 64, -50_000);
-        bit_vec_gen::<isize, u8>(100_000, 128, -50_000);
-        bit_vec_gen::<isize, u8>(1_000_000, 32, -500_000);
-        bit_vec_gen::<isize, u8>(1_000_000, 64, -500_000);
-        bit_vec_gen::<isize, u8>(1_000_000, 128, -500_000);
-        bit_vec_gen::<isize, u16>(1_000, 1, -500);
-        bit_vec_gen::<isize, u16>(1_000, 2, -500);
-        bit_vec_gen::<isize, u16>(1_000, 4, -500);
-        bit_vec_gen::<isize, u16>(1_000, 8, -500);
-        bit_vec_gen::<isize, u16>(1_000, 16, -500);
-        bit_vec_gen::<isize, u16>(10_000, 32, -5_000);
-        bit_vec_gen::<isize, u16>(10_000, 64, -5_000);
-        bit_vec_gen::<isize, u16>(10_000, 128, -5_000);
-        bit_vec_gen::<isize, u16>(100_000, 32, -50_000);
-        bit_vec_gen::<isize, u16>(100_000, 64, -50_000);
-        bit_vec_gen::<isize, u16>(100_000, 128, -50_000);
-        bit_vec_gen::<isize, u16>(1_000_000, 32, -500_000);
-        bit_vec_gen::<isize, u16>(1_000_000, 64, -500_000);
-        bit_vec_gen::<isize, u16>(1_000_000, 128, -500_000);
+        bit_vec_gen::<u32, u16>(1_000, 128, 0);
+        bit_vec_gen::<u32, u16>(4_000, 256, 0);
+        bit_vec_gen::<u32, u16>(4_000, 512, 0);
+        bit_vec_gen::<u32, u16>(4_000, 1024, 0);
+        bit_vec_gen::<u32, u16>(16_000, 2048, 0);
+        bit_vec_gen::<u32, u16>(16_000, 4096, 0);
+        bit_vec_gen::<u32, u16>(16_000, 65_000, 0);
+        bit_vec_gen::<u32, u16>(128_000, 520_000, 0);
+        bit_vec_gen::<u32, u16>(128_000, 1_000_000, 0);
+        bit_vec_gen::<u32, u16>(128_000, 8_000_000, 0);
+    }
+
+    #[test]
+    fn bit_vec_u64_u8() {
         bit_vec_gen::<u64, u8>(1_000, 1, 0);
         bit_vec_gen::<u64, u8>(1_000, 2, 0);
         bit_vec_gen::<u64, u8>(1_000, 4, 0);
         bit_vec_gen::<u64, u8>(1_000, 8, 0);
         bit_vec_gen::<u64, u8>(1_000, 16, 0);
-        bit_vec_gen::<u64, u8>(10_000, 32, 0);
-        bit_vec_gen::<u64, u8>(10_000, 64, 0);
-        bit_vec_gen::<u64, u8>(10_000, 128, 0);
-        bit_vec_gen::<u64, u8>(100_000, 32, 0);
-        bit_vec_gen::<u64, u8>(100_000, 64, 0);
-        bit_vec_gen::<u64, u8>(100_000, 128, 0);
-        bit_vec_gen::<u64, u8>(1_000_000, 32, 0);
-        bit_vec_gen::<u64, u8>(1_000_000, 64, 0);
-        bit_vec_gen::<u64, u8>(1_000_000, 128, 0);
+        bit_vec_gen::<u64, u8>(1_000, 32, 0);
+        bit_vec_gen::<u64, u8>(4_000, 32, 0);
+        bit_vec_gen::<u64, u8>(4_000, 64, 0);
+        bit_vec_gen::<u64, u8>(4_000, 128, 0);
+        bit_vec_gen::<u64, u8>(16_000, 256, 0);
+        bit_vec_gen::<u64, u8>(16_000, 512, 0);
+        bit_vec_gen::<u64, u8>(16_000, 1024, 0);
+        bit_vec_gen::<u64, u8>(128_000, 4096, 0);
+        bit_vec_gen::<u64, u8>(128_000, 65_000, 0);
+        bit_vec_gen::<u64, u8>(128_000, 520_000, 0);
+        bit_vec_gen::<u64, u8>(1_000_000, 1_000_000, 0);
+        bit_vec_gen::<u64, u8>(1_000_000, 16_000_000, 0);
+        bit_vec_gen::<u64, u8>(1_000_000, 8_000_000_000, 0);
+    }
+
+    #[test]
+    fn bit_vec_u64_u16() {
         bit_vec_gen::<u64, u16>(1_000, 1, 0);
         bit_vec_gen::<u64, u16>(1_000, 2, 0);
         bit_vec_gen::<u64, u16>(1_000, 4, 0);
         bit_vec_gen::<u64, u16>(1_000, 8, 0);
         bit_vec_gen::<u64, u16>(1_000, 16, 0);
-        bit_vec_gen::<u64, u16>(10_000, 32, 0);
-        bit_vec_gen::<u64, u16>(10_000, 64, 0);
-        bit_vec_gen::<u64, u16>(10_000, 128, 0);
-        bit_vec_gen::<u64, u16>(100_000, 32, 0);
-        bit_vec_gen::<u64, u16>(100_000, 64, 0);
-        bit_vec_gen::<u64, u16>(100_000, 128, 0);
-        bit_vec_gen::<u64, u16>(1_000_000, 32, 0);
-        bit_vec_gen::<u64, u16>(1_000_000, 64, 0);
-        bit_vec_gen::<u64, u16>(1_000_000, 128, 0);
+        bit_vec_gen::<u64, u16>(1_000, 24, 0);
+        bit_vec_gen::<u64, u16>(4_000, 32, 0);
+        bit_vec_gen::<u64, u16>(4_000, 64, 0);
+        bit_vec_gen::<u64, u16>(4_000, 128, 0);
+        bit_vec_gen::<u64, u16>(16_000, 256, 0);
+        bit_vec_gen::<u64, u16>(16_000, 512, 0);
+        bit_vec_gen::<u64, u16>(16_000, 1024, 0);
+        bit_vec_gen::<u64, u16>(128_000, 4096, 0);
+        bit_vec_gen::<u64, u16>(128_000, 65_000, 0);
+        bit_vec_gen::<u64, u16>(128_000, 520_000, 0);
+        bit_vec_gen::<u64, u16>(1_000_000, 1_000_000, 0);
+        bit_vec_gen::<u64, u16>(1_000_000, 16_000_000, 0);
+        bit_vec_gen::<u64, u16>(1_000_000, 8_000_000_000, 0);
+    }
+
+    #[test]
+    fn bit_vec_u64_u32() {
         bit_vec_gen::<u64, u32>(1_000, 1, 0);
         bit_vec_gen::<u64, u32>(1_000, 2, 0);
         bit_vec_gen::<u64, u32>(1_000, 4, 0);
         bit_vec_gen::<u64, u32>(1_000, 8, 0);
         bit_vec_gen::<u64, u32>(1_000, 16, 0);
-        bit_vec_gen::<u64, u32>(10_000, 32, 0);
-        bit_vec_gen::<u64, u32>(10_000, 64, 0);
-        bit_vec_gen::<u64, u32>(10_000, 128, 0);
-        bit_vec_gen::<u64, u32>(100_000, 32, 0);
-        bit_vec_gen::<u64, u32>(100_000, 64, 0);
-        bit_vec_gen::<u64, u32>(100_000, 128, 0);
-        bit_vec_gen::<u64, u32>(1_000_000, 32, 0);
-        bit_vec_gen::<u64, u32>(1_000_000, 64, 0);
-        bit_vec_gen::<u64, u32>(1_000_000, 128, 0);
-        bit_vec_gen::<i64, u8>(1_000, 1, 0);
-        bit_vec_gen::<i64, u8>(1_000, 2, 0);
-        bit_vec_gen::<i64, u8>(1_000, 4, 0);
-        bit_vec_gen::<i64, u8>(1_000, 8, 0);
-        bit_vec_gen::<i64, u8>(1_000, 16, 0);
-        bit_vec_gen::<i64, u8>(10_000, 32, 0);
-        bit_vec_gen::<i64, u8>(10_000, 64, 0);
-        bit_vec_gen::<i64, u8>(10_000, 128, 0);
-        bit_vec_gen::<i64, u8>(100_000, 32, 0);
-        bit_vec_gen::<i64, u8>(100_000, 64, 0);
-        bit_vec_gen::<i64, u8>(100_000, 128, 0);
-        bit_vec_gen::<i64, u8>(1_000_000, 32, 0);
-        bit_vec_gen::<i64, u8>(1_000_000, 64, 0);
-        bit_vec_gen::<i64, u8>(1_000_000, 128, 0);
-        bit_vec_gen::<i64, u16>(1_000, 1, 0);
-        bit_vec_gen::<i64, u16>(1_000, 2, 0);
-        bit_vec_gen::<i64, u16>(1_000, 4, 0);
-        bit_vec_gen::<i64, u16>(1_000, 8, 0);
-        bit_vec_gen::<i64, u16>(1_000, 16, 0);
-        bit_vec_gen::<i64, u16>(10_000, 32, 0);
-        bit_vec_gen::<i64, u16>(10_000, 64, 0);
-        bit_vec_gen::<i64, u16>(10_000, 128, 0);
-        bit_vec_gen::<i64, u16>(100_000, 32, 0);
-        bit_vec_gen::<i64, u16>(100_000, 64, 0);
-        bit_vec_gen::<i64, u16>(100_000, 128, 0);
-        bit_vec_gen::<i64, u16>(1_000_000, 32, 0);
-        bit_vec_gen::<i64, u16>(1_000_000, 64, 0);
-        bit_vec_gen::<i64, u16>(1_000_000, 128, 0);
-        bit_vec_gen::<i64, u32>(1_000, 1, 0);
-        bit_vec_gen::<i64, u32>(1_000, 2, 0);
-        bit_vec_gen::<i64, u32>(1_000, 4, 0);
-        bit_vec_gen::<i64, u32>(1_000, 8, 0);
-        bit_vec_gen::<i64, u32>(1_000, 16, 0);
-        bit_vec_gen::<i64, u32>(10_000, 32, 0);
-        bit_vec_gen::<i64, u32>(10_000, 64, 0);
-        bit_vec_gen::<i64, u32>(10_000, 128, 0);
-        bit_vec_gen::<i64, u32>(100_000, 32, 0);
-        bit_vec_gen::<i64, u32>(100_000, 64, 0);
-        bit_vec_gen::<i64, u32>(100_000, 128, 0);
-        bit_vec_gen::<i64, u32>(1_000_000, 32, 0);
-        bit_vec_gen::<i64, u32>(1_000_000, 64, 0);
-        bit_vec_gen::<i64, u32>(1_000_000, 128, 0);
+        bit_vec_gen::<u64, u32>(1_000, 24, 0);
+        bit_vec_gen::<u64, u32>(4_000, 32, 0);
+        bit_vec_gen::<u64, u32>(4_000, 64, 0);
+        bit_vec_gen::<u64, u32>(4_000, 128, 0);
+        bit_vec_gen::<u64, u32>(16_000, 256, 0);
+        bit_vec_gen::<u64, u32>(16_000, 512, 0);
+        bit_vec_gen::<u64, u32>(16_000, 1024, 0);
+        bit_vec_gen::<u64, u32>(128_000, 4096, 0);
+        bit_vec_gen::<u64, u32>(128_000, 65_000, 0);
+        bit_vec_gen::<u64, u32>(128_000, 520_000, 0);
+        bit_vec_gen::<u64, u32>(1_000_000, 1_000_000, 0);
+        bit_vec_gen::<u64, u32>(1_000_000, 16_000_000, 0);
+        bit_vec_gen::<u64, u32>(1_000_000, 8_000_000_000, 0);
+    }
+
+    #[test]
+    fn bit_vec_usize() {
+        bit_vec_gen::<usize, u8>(128_000, 32, 0);
+        bit_vec_gen::<usize, u8>(128_000, 64, 0);
+        bit_vec_gen::<usize, u8>(128_000, 128, 0);
+        bit_vec_gen::<usize, u16>(128_000, 32, 0);
+        bit_vec_gen::<usize, u16>(128_000, 64, 0);
+        bit_vec_gen::<usize, u16>(128_000, 128, 0);
+        bit_vec_gen::<usize, u32>(128_000, 256, 0);
+        bit_vec_gen::<usize, u32>(128_000, 1024, 0);
+        bit_vec_gen::<usize, u32>(128_000, 4096, 0);
+        bit_vec_gen::<usize, u32>(128_000, 1_000_000, 0);
+    }
+
+    #[test]
+    fn bit_vec_i16_u8() {
+        bit_vec_gen::<i16, u8>(1_000, 1, -500);
+        bit_vec_gen::<i16, u8>(1_000, 2, -600);
+        bit_vec_gen::<i16, u8>(1_000, 4, -700);
+        bit_vec_gen::<i16, u8>(1_000, 8, -800);
+        bit_vec_gen::<i16, u8>(1_000, 16, -900);
+        bit_vec_gen::<i16, u8>(1_000, 24, -950);
+        bit_vec_gen::<i16, u8>(1_000, 32, -975);
+        bit_vec_gen::<i16, u8>(4_000, 64, -5_000);
+    }
+
+    #[test]
+    fn bit_vec_i32_u8() {
+        bit_vec_gen::<i32, u8>(1_000, 1, -500);
+        bit_vec_gen::<i32, u8>(1_000, 2, -600);
+        bit_vec_gen::<i32, u8>(1_000, 4, -700);
+        bit_vec_gen::<i32, u8>(1_000, 8, -800);
+        bit_vec_gen::<i32, u8>(1_000, 16, -900);
+        bit_vec_gen::<i32, u8>(1_000, 24, -950);
+        bit_vec_gen::<i32, u8>(1_000, 32, -975);
+        bit_vec_gen::<i32, u8>(4_000, 128, -5_000);
+        bit_vec_gen::<i32, u8>(4_000, 256, -6_000);
+        bit_vec_gen::<i32, u8>(4_000, 512, -7_000);
+        bit_vec_gen::<i32, u8>(16_000, 1024, -50_000);
+        bit_vec_gen::<i32, u8>(16_000, 2048, -60_000);
+        bit_vec_gen::<i32, u8>(16_000, 4096, -70_000);
+        bit_vec_gen::<i32, u8>(128_000, 65_000, -500_000);
+        bit_vec_gen::<i32, u8>(128_000, 520_000, -600_000);
+        bit_vec_gen::<i32, u8>(128_000, 8_000_000, -700_000);
+    }
+
+    #[test]
+    fn bit_vec_i32_u16() {
+        bit_vec_gen::<i32, u16>(1_000, 1, -500);
+        bit_vec_gen::<i32, u16>(1_000, 2, -600);
+        bit_vec_gen::<i32, u16>(1_000, 4, -700);
+        bit_vec_gen::<i32, u16>(1_000, 8, -800);
+        bit_vec_gen::<i32, u16>(1_000, 16, -900);
+        bit_vec_gen::<i32, u16>(1_000, 24, -950);
+        bit_vec_gen::<i32, u16>(4_000, 128, -5_000);
+        bit_vec_gen::<i32, u16>(4_000, 256, -6_000);
+        bit_vec_gen::<i32, u16>(4_000, 512, -7_000);
+        bit_vec_gen::<i32, u16>(16_000, 1024, -50_000);
+        bit_vec_gen::<i32, u16>(16_000, 2048, -60_000);
+        bit_vec_gen::<i32, u16>(16_000, 4096, -70_000);
+        bit_vec_gen::<i32, u16>(128_000, 65_000, -500_000);
+        bit_vec_gen::<i32, u16>(128_000, 520_000, -600_000);
+        bit_vec_gen::<i32, u16>(128_000, 8_000_000, -700_000);
+    }
+
+    #[test]
+    fn bit_vec_i64_u8() {
+        bit_vec_gen::<i64, u8>(1_000, 1, -500);
+        bit_vec_gen::<i64, u8>(1_000, 2, -600);
+        bit_vec_gen::<i64, u8>(1_000, 4, -700);
+        bit_vec_gen::<i64, u8>(1_000, 8, -800);
+        bit_vec_gen::<i64, u8>(1_000, 16, -900);
+        bit_vec_gen::<i64, u8>(1_000, 32, -950);
+        bit_vec_gen::<i64, u8>(4_000, 64, -5_000);
+        bit_vec_gen::<i64, u8>(4_000, 128, -6_000);
+        bit_vec_gen::<i64, u8>(4_000, 256, -7_000);
+        bit_vec_gen::<i64, u8>(16_000, 1024, -50_000);
+        bit_vec_gen::<i64, u8>(16_000, 2048, -60_000);
+        bit_vec_gen::<i64, u8>(16_000, 4096, -70_000);
+        bit_vec_gen::<i64, u8>(128_000, 65_000, -500_000);
+        bit_vec_gen::<i64, u8>(128_000, 130_000, -600_000);
+        bit_vec_gen::<i64, u8>(128_000, 260_000, -700_000);
+        bit_vec_gen::<i64, u8>(1_000_000, 1_000_000, -5_000_000);
+        bit_vec_gen::<i64, u8>(1_000_000, 400_000_000, -6_000_000);
+        bit_vec_gen::<i64, u8>(1_000_000, 8_000_000_000, -7_000_000);
+    }
+
+    #[test]
+    fn bit_vec_i64_u16() {
+        bit_vec_gen::<i64, u16>(1_000, 1, -500);
+        bit_vec_gen::<i64, u16>(1_000, 2, -600);
+        bit_vec_gen::<i64, u16>(1_000, 4, -700);
+        bit_vec_gen::<i64, u16>(1_000, 8, -800);
+        bit_vec_gen::<i64, u16>(1_000, 16, -900);
+        bit_vec_gen::<i64, u16>(1_000, 24, -950);
+        bit_vec_gen::<i64, u16>(4_000, 32, -5_000);
+        bit_vec_gen::<i64, u16>(4_000, 64, -6_000);
+        bit_vec_gen::<i64, u16>(4_000, 128, -7_000);
+        bit_vec_gen::<i64, u16>(16_000, 1024, -50_000);
+        bit_vec_gen::<i64, u16>(16_000, 2048, -60_000);
+        bit_vec_gen::<i64, u16>(16_000, 4096, -70_000);
+        bit_vec_gen::<i64, u16>(128_000, 65_000, -500_000);
+        bit_vec_gen::<i64, u16>(128_000, 130_000, -600_000);
+        bit_vec_gen::<i64, u16>(128_000, 260_000, -700_000);
+        bit_vec_gen::<i64, u16>(1_000_000, 1_000_000, -5_000_000);
+        bit_vec_gen::<i64, u16>(1_000_000, 400_000_000, -6_000_000);
+        bit_vec_gen::<i64, u16>(1_000_000, 8_000_000_000, -7_000_000);
+    }
+
+    #[test]
+    fn bit_vec_i64_u32() {
+        bit_vec_gen::<i64, u32>(1_000, 1, -500);
+        bit_vec_gen::<i64, u32>(1_000, 2, -600);
+        bit_vec_gen::<i64, u32>(1_000, 4, -700);
+        bit_vec_gen::<i64, u32>(1_000, 8, -800);
+        bit_vec_gen::<i64, u32>(1_000, 16, -900);
+        bit_vec_gen::<i64, u32>(1_000, 24, -950);
+        bit_vec_gen::<i64, u32>(4_000, 32, -5_000);
+        bit_vec_gen::<i64, u32>(4_000, 64, -6_000);
+        bit_vec_gen::<i64, u32>(4_000, 128, -7_000);
+        bit_vec_gen::<i64, u32>(16_000, 1024, -50_000);
+        bit_vec_gen::<i64, u32>(16_000, 2048, -60_000);
+        bit_vec_gen::<i64, u32>(16_000, 4096, -70_000);
+        bit_vec_gen::<i64, u32>(128_000, 65_000, -500_000);
+        bit_vec_gen::<i64, u32>(128_000, 130_000, -600_000);
+        bit_vec_gen::<i64, u32>(128_000, 260_000, -700_000);
+        bit_vec_gen::<i64, u32>(1_000_000, 1_000_000, -5_000_000);
+        bit_vec_gen::<i64, u32>(1_000_000, 400_000_000, -6_000_000);
+        bit_vec_gen::<i64, u32>(1_000_000, 8_000_000_000, -7_000_000);
+    }
+
+    #[test]
+    fn bit_vec_isize() {
+        bit_vec_gen::<isize, u8>(128_000, 32, -500);
+        bit_vec_gen::<isize, u8>(128_000, 64, -600);
+        bit_vec_gen::<isize, u8>(128_000, 128, -700);
+        bit_vec_gen::<isize, u16>(128_000, 32, -5_000);
+        bit_vec_gen::<isize, u16>(128_000, 64, -6_000);
+        bit_vec_gen::<isize, u16>(128_000, 128, -7_000);
+        bit_vec_gen::<isize, u32>(128_000, 256, -50_000);
+        bit_vec_gen::<isize, u32>(128_000, 1024, -60_000);
+        bit_vec_gen::<isize, u32>(128_000, 4096, -70_000);
+        bit_vec_gen::<isize, u32>(128_000, 1_000_000, -8_000_000);
     }
 }

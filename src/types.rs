@@ -101,17 +101,17 @@ pub trait IntoTruncated<U: Integer>
 where
     Self: Sized,
 {
-    /// Cast self into a smaller truncated integer type
-    /// Returns None if the bigger integer would be sliced
+    /// Cast self into a smaller truncated integer type.
     fn into_trunc(&self) -> U;
 
     /// Safe version of into_trunc().
+    /// Returns None if the bigger integer would be sliced.
     fn into_trunc_safe(&self) -> Result<U, CompVecError>;
 }
 
 /// Trait for converting a smaller integer type into a larger one
 /// We cannot use the Into trait here since usize only implements
-/// the From trait with u8 and u16
+/// the From trait with u8 and u16.
 pub trait FromTruncated<U: Integer>
 where
     Self: Sized,
@@ -123,6 +123,7 @@ where
     fn from_trunc_safe(other: U) -> Result<Self, CompVecError>;
 }
 
+/// Macro implementing the traits IntoTruncated and FromTruncated for an integer type.
 macro_rules! trunc_conv {
     ($t: ty, $u: ty) => {
         impl IntoTruncated<$u> for $t {

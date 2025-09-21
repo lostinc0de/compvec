@@ -11,7 +11,6 @@ where
     max: T,
     stride: usize,
     n: usize,
-    shifts: Vec<usize>,
 }
 
 impl<T: Integer, U: Integer> ByteVec<T, U>
@@ -20,14 +19,15 @@ where
 {
     /// Returns the maximum value and the new stride, such that val fits.
     fn compute_max_value_and_stride(val: T) -> (T, usize) {
-        // For signed integers leave out the signed bit
-        let mul: T = if T::SIGNED {
+        let mul = T::from_trunc(U::MAX);
+        let mut max: T = if T::SIGNED {
+            // For signed integers leave out the signed bit
             T::from_trunc(U::MAX / U::TWO)
         } else {
-            T::from_trunc(U::MAX)
+            mul
         };
-        let mut max: T = mul;
         let mut stride: usize = 1;
+        // Multiply max value until it is large enough
         while max < val.abs() {
             max *= mul;
             stride += 1;
@@ -38,31 +38,12 @@ where
     /// Resizes the underlying Vec of smaller integers, if val is too large.
     fn check_and_resize(&mut self, val: T) {
         if val.abs() > self.max {
-            let (max_new, stride_new) = Self::compute_max_value_and_stride(val);
-            let mut values_new = Vec::<U>::with_capacity(stride_new * self.len());
-            let n_zeros_fill = stride_new - self.stride;
-            for c in self.values.chunks_exact(self.stride) {
-                for &x in c {
-                    values_new.push(x);
-                }
-                for _ in 0..n_zeros_fill {
-                    values_new.push(U::ZERO);
-                }
+            let mut cop = Self::with_max_value(self.len(), val);
+            for v in self.iterate() {
+                cop.push(v);
             }
-            self.max = max_new;
-            self.stride = stride_new;
-            self.values = values_new;
+            *self = cop;
         }
-    }
-
-    /// Returns a vec containing the number of shifts for extracting a value.
-    fn shifts() -> Vec<usize> {
-        let n_shifts = (T::N_BITS / U::N_BITS) as usize;
-        let mut shifts = vec![0usize; n_shifts];
-        for i in 1..n_shifts {
-            shifts[i] = i * U::N_BITS;
-        }
-        shifts
     }
 
     /// Returns a byte vec container with a maximum value.
@@ -71,11 +52,10 @@ where
     pub fn with_max_value(n: usize, val_max: T) -> Self {
         let (max, stride) = Self::compute_max_value_and_stride(val_max);
         Self {
-            values: Vec::<U>::with_capacity(n),
+            values: Vec::<U>::with_capacity(n * stride),
             max,
             stride,
             n: 0,
-            shifts: Self::shifts(),
         }
     }
 
@@ -92,19 +72,23 @@ where
     type Type = T;
 
     fn with_capacity(n: usize) -> Self {
+        let max = if T::SIGNED {
+            T::from_trunc(U::MAX / U::TWO)
+        } else {
+            T::from_trunc(U::MAX)
+        };
         Self {
             values: Vec::<U>::with_capacity(n),
-            max: T::from_trunc(U::MAX),
+            max,
             stride: 1,
             n: 0,
-            shifts: Self::shifts(),
         }
     }
 
     fn get(&self, i: usize) -> T {
         let start = i * self.stride;
         // Loop unrolling for performance
-        match self.stride {
+        let mut ret = match self.stride {
             1 => T::from_trunc(self.values[start]),
             2 => {
                 T::from_trunc(self.values[start])
@@ -275,176 +259,191 @@ where
                 let mut ret = T::from_trunc(self.values[start]);
                 for i in 1..self.stride {
                     let val = T::from_trunc(self.values[start + i]);
-                    ret |= val << self.shifts[i];
+                    ret |= val << (i * U::N_BITS);
                 }
                 ret
             }
+        };
+        if T::SIGNED {
+            let sign = self.values[start + self.stride - 1] & (U::ONE << (U::N_BITS - 1));
+            if sign > U::ZERO {
+                // Remove the sign bit and negate the return value using two's complement
+                ret &= !(T::ONE << (self.stride * U::N_BITS - 1));
+                ret = ret.negate();
+            }
         }
+        ret
     }
 
     fn set(&mut self, i: usize, val: T) {
         self.check_and_resize(val);
         let start = i * self.stride;
-        self.values[start] = val.into_trunc();
+        let val_abs = val.abs();
+        self.values[start] = val_abs.into_trunc();
         // Loop unrolling for performance
         match self.stride {
             1 => {
             },
             2 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
             },
             3 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
             },
             4 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
             },
             5 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
             },
             6 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
             },
             7 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
             },
             8 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
             },
             9 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
             },
             10 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val >> 9 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
             },
             11 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val >> 10 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
+                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
             },
             12 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val >> 11 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
+                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
+                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
             },
             13 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val >> 11 * U::N_BITS).into_trunc();
-                self.values[start + 12] = (val >> 12 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
+                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
+                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
+                self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
             },
             14 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val >> 11 * U::N_BITS).into_trunc();
-                self.values[start + 12] = (val >> 12 * U::N_BITS).into_trunc();
-                self.values[start + 13] = (val >> 13 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
+                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
+                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
+                self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
+                self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
             },
             15 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val >> 11 * U::N_BITS).into_trunc();
-                self.values[start + 12] = (val >> 12 * U::N_BITS).into_trunc();
-                self.values[start + 13] = (val >> 13 * U::N_BITS).into_trunc();
-                self.values[start + 14] = (val >> 14 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
+                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
+                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
+                self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
+                self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
+                self.values[start + 14] = (val_abs >> 14 * U::N_BITS).into_trunc();
             },
             16 => {
-                self.values[start + 1] = (val >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val >> 11 * U::N_BITS).into_trunc();
-                self.values[start + 12] = (val >> 12 * U::N_BITS).into_trunc();
-                self.values[start + 13] = (val >> 13 * U::N_BITS).into_trunc();
-                self.values[start + 14] = (val >> 14 * U::N_BITS).into_trunc();
-                self.values[start + 15] = (val >> 15 * U::N_BITS).into_trunc();
+                self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
+                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
+                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
+                self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
+                self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
+                self.values[start + 14] = (val_abs >> 14 * U::N_BITS).into_trunc();
+                self.values[start + 15] = (val_abs >> 15 * U::N_BITS).into_trunc();
             },
             _ => {
                 for i in 1..self.stride {
-                    let tmp = val >> self.shifts[i];
+                    let tmp = val_abs >> (i * U::N_BITS);
                     self.values[start + i] = tmp.into_trunc();
                 }
+            }
+        }
+        if T::SIGNED {
+            if val.is_neg() {
+                self.values[start + self.stride - 1] |= U::ONE << (U::N_BITS - 1);
             }
         }
     }
@@ -530,12 +529,18 @@ mod tests {
         for i in 0..n {
             assert_eq!(byte_vec_ref[i], byte_vec.get(i));
         }
+        // Test iterator
+        assert_eq!(byte_vec.iterate().max(), byte_vec_ref.iterate().max());
+        for (v0, v1) in byte_vec.iterate().zip(byte_vec_ref.iterate()) {
+            assert_eq!(v0, v1);
+        }
         // Test by pushing values
         let mut byte_vec = ByteVec::<T, U>::new();
         for i in 0..n {
             byte_vec.push(byte_vec_ref[i]);
             assert_eq!(byte_vec_ref[i], byte_vec.get(i));
         }
+        assert_eq!(byte_vec_ref.len(), byte_vec.len());
         // Test inserting values
         for i in (0..n).step_by(n / 16) {
             byte_vec_ref.insert(i, byte_vec_ref[i]);
@@ -556,141 +561,284 @@ mod tests {
             assert_eq!(byte_vec_ref[i], byte_vec.get(i));
         }
     }
+    
+    #[test]
+    fn byte_vec_len_one_insert() {
+        // Test inserting a value at index 0 and 1 for a Vec / ByteVec of length one.
+        let mut vec_ref = vec![64];
+        let mut byte_vec = ByteVec::<u64, u8>::from(vec_ref.clone());
+        vec_ref.insert(0, 12);
+        byte_vec.insert(0, 12);
+        assert_eq!(vec_ref.get(0), byte_vec.get(0));
+        assert_eq!(vec_ref.get(1), byte_vec.get(1));
+        vec_ref.resize(1, 0);
+        byte_vec.resize(1, 0);
+        assert_eq!(vec_ref.get(0), byte_vec.get(0));
+        assert_eq!(vec_ref.len(), byte_vec.len());
+        vec_ref.insert(1, 24);
+        byte_vec.insert(1, 24);
+        assert_eq!(vec_ref.get(0), byte_vec.get(0));
+        assert_eq!(vec_ref.get(1), byte_vec.get(1));
+    }
 
     #[test]
-    fn byte_vec() {
-        byte_vec_gen::<u16, u8>(1_000, 12, 0);
-        byte_vec_gen::<u32, u8>(1_000, 24, 0);
-        byte_vec_gen::<u64, u8>(1_000, 32, 0);
-        byte_vec_gen::<u32, u16>(1_000, 24, 0);
-        byte_vec_gen::<u64, u16>(1_000, 24, 0);
-        byte_vec_gen::<u64, u32>(1_000, 24, 0);
-        byte_vec_gen::<i16, u8>(1_000, 12, -12200);
-        byte_vec_gen::<i32, u8>(1_000, 1, 0);
-        byte_vec_gen::<i64, u8>(1_000, 1, 0);
-        byte_vec_gen::<i32, u16>(1_000, 1, 0);
-        byte_vec_gen::<i32, u16>(1_000, 1, 0);
-        byte_vec_gen::<i64, u32>(1_000, 1, 0);
-        byte_vec_gen::<usize, u8>(1_000, 2, 0);
-        byte_vec_gen::<usize, u16>(1_000, 4, 0);
-        byte_vec_gen::<isize, u8>(1_000, 1, 0);
-        byte_vec_gen::<isize, u16>(1_000, 1, 0);
+    fn byte_vec_u16_u8() {
         byte_vec_gen::<u16, u8>(1_000, 1, 0);
         byte_vec_gen::<u16, u8>(1_000, 2, 0);
         byte_vec_gen::<u16, u8>(1_000, 4, 0);
         byte_vec_gen::<u16, u8>(1_000, 8, 0);
         byte_vec_gen::<u16, u8>(1_000, 16, 0);
+        byte_vec_gen::<u16, u8>(1_000, 32, 0);
+        byte_vec_gen::<u16, u8>(1_000, 128, 0);
+        byte_vec_gen::<u16, u8>(4_000, 192, 0);
+    }
+
+    #[test]
+    fn byte_vec_u32_u8() {
         byte_vec_gen::<u32, u8>(1_000, 1, 0);
         byte_vec_gen::<u32, u8>(1_000, 2, 0);
         byte_vec_gen::<u32, u8>(1_000, 4, 0);
         byte_vec_gen::<u32, u8>(1_000, 8, 0);
         byte_vec_gen::<u32, u8>(1_000, 16, 0);
-        byte_vec_gen::<u32, u8>(10_000, 32, 0);
-        byte_vec_gen::<u32, u8>(10_000, 64, 0);
-        byte_vec_gen::<u32, u8>(10_000, 128, 0);
-        byte_vec_gen::<u32, u8>(100_000, 32, 0);
-        byte_vec_gen::<u32, u8>(100_000, 64, 0);
-        byte_vec_gen::<u32, u8>(100_000, 128, 0);
-        byte_vec_gen::<u32, u8>(1_000_000, 32, 0);
-        byte_vec_gen::<u32, u8>(1_000_000, 64, 0);
-        byte_vec_gen::<u32, u8>(1_000_000, 128, 0);
+        byte_vec_gen::<u32, u8>(1_000, 128, 0);
+        byte_vec_gen::<u32, u8>(4_000, 256, 0);
+        byte_vec_gen::<u32, u8>(4_000, 512, 0);
+        byte_vec_gen::<u32, u8>(4_000, 1024, 0);
+        byte_vec_gen::<u32, u8>(16_000, 2048, 0);
+        byte_vec_gen::<u32, u8>(16_000, 4096, 0);
+        byte_vec_gen::<u32, u8>(16_000, 65_000, 0);
+        byte_vec_gen::<u32, u8>(128_000, 520_000, 0);
+        byte_vec_gen::<u32, u8>(128_000, 1_000_000, 0);
+        byte_vec_gen::<u32, u8>(128_000, 8_000_000, 0);
+    }
+
+    #[test]
+    fn byte_vec_u32_u16() {
         byte_vec_gen::<u32, u16>(1_000, 1, 0);
         byte_vec_gen::<u32, u16>(1_000, 2, 0);
         byte_vec_gen::<u32, u16>(1_000, 4, 0);
         byte_vec_gen::<u32, u16>(1_000, 8, 0);
         byte_vec_gen::<u32, u16>(1_000, 16, 0);
-        byte_vec_gen::<u32, u16>(10_000, 32, 0);
-        byte_vec_gen::<u32, u16>(10_000, 64, 0);
-        byte_vec_gen::<u32, u16>(10_000, 128, 0);
-        byte_vec_gen::<u32, u16>(100_000, 32, 0);
-        byte_vec_gen::<u32, u16>(100_000, 64, 0);
-        byte_vec_gen::<u32, u16>(100_000, 128, 0);
-        byte_vec_gen::<u32, u16>(1_000_000, 32, 0);
-        byte_vec_gen::<u32, u16>(1_000_000, 64, 0);
-        byte_vec_gen::<u32, u16>(1_000_000, 128, 0);
+        byte_vec_gen::<u32, u16>(1_000, 128, 0);
+        byte_vec_gen::<u32, u16>(4_000, 256, 0);
+        byte_vec_gen::<u32, u16>(4_000, 512, 0);
+        byte_vec_gen::<u32, u16>(4_000, 1024, 0);
+        byte_vec_gen::<u32, u16>(16_000, 2048, 0);
+        byte_vec_gen::<u32, u16>(16_000, 4096, 0);
+        byte_vec_gen::<u32, u16>(16_000, 65_000, 0);
+        byte_vec_gen::<u32, u16>(128_000, 520_000, 0);
+        byte_vec_gen::<u32, u16>(128_000, 1_000_000, 0);
+        byte_vec_gen::<u32, u16>(128_000, 8_000_000, 0);
+    }
+
+    #[test]
+    fn byte_vec_u64_u8() {
         byte_vec_gen::<u64, u8>(1_000, 1, 0);
         byte_vec_gen::<u64, u8>(1_000, 2, 0);
         byte_vec_gen::<u64, u8>(1_000, 4, 0);
         byte_vec_gen::<u64, u8>(1_000, 8, 0);
         byte_vec_gen::<u64, u8>(1_000, 16, 0);
-        byte_vec_gen::<u64, u8>(10_000, 32, 0);
-        byte_vec_gen::<u64, u8>(10_000, 64, 0);
-        byte_vec_gen::<u64, u8>(10_000, 128, 0);
-        byte_vec_gen::<u64, u8>(100_000, 32, 0);
-        byte_vec_gen::<u64, u8>(100_000, 64, 0);
-        byte_vec_gen::<u64, u8>(100_000, 128, 0);
-        byte_vec_gen::<u64, u8>(1_000_000, 32, 0);
-        byte_vec_gen::<u64, u8>(1_000_000, 64, 0);
-        byte_vec_gen::<u64, u8>(1_000_000, 128, 0);
+        byte_vec_gen::<u64, u8>(1_000, 32, 0);
+        byte_vec_gen::<u64, u8>(4_000, 32, 0);
+        byte_vec_gen::<u64, u8>(4_000, 64, 0);
+        byte_vec_gen::<u64, u8>(4_000, 128, 0);
+        byte_vec_gen::<u64, u8>(16_000, 256, 0);
+        byte_vec_gen::<u64, u8>(16_000, 512, 0);
+        byte_vec_gen::<u64, u8>(16_000, 1024, 0);
+        byte_vec_gen::<u64, u8>(128_000, 4096, 0);
+        byte_vec_gen::<u64, u8>(128_000, 65_000, 0);
+        byte_vec_gen::<u64, u8>(128_000, 520_000, 0);
+        byte_vec_gen::<u64, u8>(1_000_000, 1_000_000, 0);
+        byte_vec_gen::<u64, u8>(1_000_000, 16_000_000, 0);
+        byte_vec_gen::<u64, u8>(1_000_000, 8_000_000_000, 0);
+    }
+
+    #[test]
+    fn byte_vec_u64_u16() {
         byte_vec_gen::<u64, u16>(1_000, 1, 0);
         byte_vec_gen::<u64, u16>(1_000, 2, 0);
         byte_vec_gen::<u64, u16>(1_000, 4, 0);
         byte_vec_gen::<u64, u16>(1_000, 8, 0);
         byte_vec_gen::<u64, u16>(1_000, 16, 0);
-        byte_vec_gen::<u64, u16>(10_000, 32, 0);
-        byte_vec_gen::<u64, u16>(10_000, 64, 0);
-        byte_vec_gen::<u64, u16>(10_000, 128, 0);
-        byte_vec_gen::<u64, u16>(100_000, 32, 0);
-        byte_vec_gen::<u64, u16>(100_000, 64, 0);
-        byte_vec_gen::<u64, u16>(100_000, 128, 0);
-        byte_vec_gen::<u64, u16>(1_000_000, 32, 0);
-        byte_vec_gen::<u64, u16>(1_000_000, 64, 0);
-        byte_vec_gen::<u64, u16>(1_000_000, 128, 0);
+        byte_vec_gen::<u64, u16>(1_000, 24, 0);
+        byte_vec_gen::<u64, u16>(4_000, 32, 0);
+        byte_vec_gen::<u64, u16>(4_000, 64, 0);
+        byte_vec_gen::<u64, u16>(4_000, 128, 0);
+        byte_vec_gen::<u64, u16>(16_000, 256, 0);
+        byte_vec_gen::<u64, u16>(16_000, 512, 0);
+        byte_vec_gen::<u64, u16>(16_000, 1024, 0);
+        byte_vec_gen::<u64, u16>(128_000, 4096, 0);
+        byte_vec_gen::<u64, u16>(128_000, 65_000, 0);
+        byte_vec_gen::<u64, u16>(128_000, 520_000, 0);
+        byte_vec_gen::<u64, u16>(1_000_000, 1_000_000, 0);
+        byte_vec_gen::<u64, u16>(1_000_000, 16_000_000, 0);
+        byte_vec_gen::<u64, u16>(1_000_000, 8_000_000_000, 0);
+    }
+
+    #[test]
+    fn byte_vec_u64_u32() {
         byte_vec_gen::<u64, u32>(1_000, 1, 0);
         byte_vec_gen::<u64, u32>(1_000, 2, 0);
         byte_vec_gen::<u64, u32>(1_000, 4, 0);
         byte_vec_gen::<u64, u32>(1_000, 8, 0);
         byte_vec_gen::<u64, u32>(1_000, 16, 0);
-        byte_vec_gen::<u64, u32>(10_000, 32, 0);
-        byte_vec_gen::<u64, u32>(10_000, 64, 0);
-        byte_vec_gen::<u64, u32>(10_000, 128, 0);
-        byte_vec_gen::<u64, u32>(100_000, 32, 0);
-        byte_vec_gen::<u64, u32>(100_000, 64, 0);
-        byte_vec_gen::<u64, u32>(100_000, 128, 0);
-        byte_vec_gen::<u64, u32>(1_000_000, 32, 0);
-        byte_vec_gen::<u64, u32>(1_000_000, 64, 0);
-        byte_vec_gen::<u64, u32>(1_000_000, 128, 0);
-        byte_vec_gen::<i64, u8>(1_000, 1, 0);
-        byte_vec_gen::<i64, u8>(1_000, 2, 0);
-        byte_vec_gen::<i64, u8>(1_000, 4, 0);
-        byte_vec_gen::<i64, u8>(1_000, 8, 0);
-        byte_vec_gen::<i64, u8>(1_000, 16, 0);
-        byte_vec_gen::<i64, u8>(10_000, 32, 0);
-        byte_vec_gen::<i64, u8>(10_000, 64, 0);
-        byte_vec_gen::<i64, u8>(10_000, 128, 0);
-        byte_vec_gen::<i64, u8>(100_000, 32, 0);
-        byte_vec_gen::<i64, u8>(100_000, 64, 0);
-        byte_vec_gen::<i64, u8>(100_000, 128, 0);
-        byte_vec_gen::<i64, u8>(1_000_000, 32, 0);
-        byte_vec_gen::<i64, u8>(1_000_000, 64, 0);
-        byte_vec_gen::<i64, u8>(1_000_000, 128, 0);
-        byte_vec_gen::<i64, u16>(1_000, 1, 0);
-        byte_vec_gen::<i64, u16>(1_000, 2, 0);
-        byte_vec_gen::<i64, u16>(1_000, 4, 0);
-        byte_vec_gen::<i64, u16>(1_000, 8, 0);
-        byte_vec_gen::<i64, u16>(1_000, 16, 0);
-        byte_vec_gen::<i64, u16>(10_000, 32, 0);
-        byte_vec_gen::<i64, u16>(10_000, 64, 0);
-        byte_vec_gen::<i64, u16>(10_000, 128, 0);
-        byte_vec_gen::<i64, u16>(100_000, 32, 0);
-        byte_vec_gen::<i64, u16>(100_000, 64, 0);
-        byte_vec_gen::<i64, u16>(100_000, 128, 0);
-        byte_vec_gen::<i64, u16>(1_000_000, 32, 0);
-        byte_vec_gen::<i64, u16>(1_000_000, 64, 0);
-        byte_vec_gen::<i64, u16>(1_000_000, 128, 0);
-        byte_vec_gen::<i64, u32>(1_000, 1, 0);
-        byte_vec_gen::<i64, u32>(1_000, 2, 0);
-        byte_vec_gen::<i64, u32>(1_000, 4, 0);
-        byte_vec_gen::<i64, u32>(1_000, 8, 0);
-        byte_vec_gen::<i64, u32>(1_000, 16, 0);
-        byte_vec_gen::<i64, u32>(10_000, 32, 0);
-        byte_vec_gen::<i64, u32>(10_000, 64, 0);
-        byte_vec_gen::<i64, u32>(10_000, 128, 0);
-        byte_vec_gen::<i64, u32>(100_000, 32, 0);
-        byte_vec_gen::<i64, u32>(100_000, 64, 0);
-        byte_vec_gen::<i64, u32>(100_000, 128, 0);
-        byte_vec_gen::<i64, u32>(1_000_000, 32, 0);
-        byte_vec_gen::<i64, u32>(1_000_000, 64, 0);
-        byte_vec_gen::<i64, u32>(1_000_000, 128, 0);
+        byte_vec_gen::<u64, u32>(1_000, 24, 0);
+        byte_vec_gen::<u64, u32>(4_000, 32, 0);
+        byte_vec_gen::<u64, u32>(4_000, 64, 0);
+        byte_vec_gen::<u64, u32>(4_000, 128, 0);
+        byte_vec_gen::<u64, u32>(16_000, 256, 0);
+        byte_vec_gen::<u64, u32>(16_000, 512, 0);
+        byte_vec_gen::<u64, u32>(16_000, 1024, 0);
+        byte_vec_gen::<u64, u32>(128_000, 4096, 0);
+        byte_vec_gen::<u64, u32>(128_000, 65_000, 0);
+        byte_vec_gen::<u64, u32>(128_000, 520_000, 0);
+        byte_vec_gen::<u64, u32>(1_000_000, 1_000_000, 0);
+        byte_vec_gen::<u64, u32>(1_000_000, 16_000_000, 0);
+        byte_vec_gen::<u64, u32>(1_000_000, 8_000_000_000, 0);
+    }
+
+    #[test]
+    fn byte_vec_usize() {
+        byte_vec_gen::<usize, u8>(128_000, 32, 0);
+        byte_vec_gen::<usize, u8>(128_000, 64, 0);
+        byte_vec_gen::<usize, u8>(128_000, 128, 0);
+        byte_vec_gen::<usize, u16>(128_000, 32, 0);
+        byte_vec_gen::<usize, u16>(128_000, 64, 0);
+        byte_vec_gen::<usize, u16>(128_000, 128, 0);
+        byte_vec_gen::<usize, u32>(128_000, 256, 0);
+        byte_vec_gen::<usize, u32>(128_000, 1024, 0);
+        byte_vec_gen::<usize, u32>(128_000, 4096, 0);
+        byte_vec_gen::<usize, u32>(128_000, 1_000_000, 0);
+    }
+
+    #[test]
+    fn byte_vec_i16_u8() {
+        byte_vec_gen::<i16, u8>(1_000, 1, -500);
+        byte_vec_gen::<i16, u8>(1_000, 2, -600);
+        byte_vec_gen::<i16, u8>(1_000, 4, -700);
+        byte_vec_gen::<i16, u8>(1_000, 8, -800);
+        byte_vec_gen::<i16, u8>(1_000, 16, -900);
+        byte_vec_gen::<i16, u8>(1_000, 24, -950);
+        byte_vec_gen::<i16, u8>(1_000, 32, -975);
+        byte_vec_gen::<i16, u8>(4_000, 64, -5_000);
+    }
+
+    #[test]
+    fn byte_vec_i32_u8() {
+        byte_vec_gen::<i32, u8>(1_000, 1, -500);
+        byte_vec_gen::<i32, u8>(1_000, 2, -600);
+        byte_vec_gen::<i32, u8>(1_000, 4, -700);
+        byte_vec_gen::<i32, u8>(1_000, 8, -800);
+        byte_vec_gen::<i32, u8>(1_000, 16, -900);
+        byte_vec_gen::<i32, u8>(1_000, 24, -950);
+        byte_vec_gen::<i32, u8>(1_000, 32, -975);
+        byte_vec_gen::<i32, u8>(4_000, 128, -5_000);
+        byte_vec_gen::<i32, u8>(4_000, 256, -6_000);
+        byte_vec_gen::<i32, u8>(4_000, 512, -7_000);
+        byte_vec_gen::<i32, u8>(16_000, 1024, -50_000);
+        byte_vec_gen::<i32, u8>(16_000, 2048, -60_000);
+        byte_vec_gen::<i32, u8>(16_000, 4096, -70_000);
+        byte_vec_gen::<i32, u8>(128_000, 65_000, -500_000);
+        byte_vec_gen::<i32, u8>(128_000, 520_000, -600_000);
+        byte_vec_gen::<i32, u8>(128_000, 8_000_000, -700_000);
+    }
+
+    #[test]
+    fn byte_vec_i32_u16() {
+        byte_vec_gen::<i32, u16>(1_000, 1, -500);
+        byte_vec_gen::<i32, u16>(1_000, 2, -600);
+        byte_vec_gen::<i32, u16>(1_000, 4, -700);
+        byte_vec_gen::<i32, u16>(1_000, 8, -800);
+        byte_vec_gen::<i32, u16>(1_000, 16, -900);
+        byte_vec_gen::<i32, u16>(1_000, 24, -950);
+        byte_vec_gen::<i32, u16>(4_000, 128, -5_000);
+        byte_vec_gen::<i32, u16>(4_000, 256, -6_000);
+        byte_vec_gen::<i32, u16>(4_000, 512, -7_000);
+        byte_vec_gen::<i32, u16>(16_000, 1024, -50_000);
+        byte_vec_gen::<i32, u16>(16_000, 2048, -60_000);
+        byte_vec_gen::<i32, u16>(16_000, 4096, -70_000);
+        byte_vec_gen::<i32, u16>(128_000, 65_000, -500_000);
+        byte_vec_gen::<i32, u16>(128_000, 520_000, -600_000);
+        byte_vec_gen::<i32, u16>(128_000, 8_000_000, -700_000);
+    }
+
+    #[test]
+    fn byte_vec_i64_u8() {
+        byte_vec_gen::<i64, u8>(1_000, 1, -500);
+        byte_vec_gen::<i64, u8>(1_000, 2, -600);
+        byte_vec_gen::<i64, u8>(1_000, 4, -700);
+        byte_vec_gen::<i64, u8>(1_000, 8, -800);
+        byte_vec_gen::<i64, u8>(1_000, 16, -900);
+        byte_vec_gen::<i64, u8>(1_000, 32, -950);
+        byte_vec_gen::<i64, u8>(4_000, 64, -5_000);
+        byte_vec_gen::<i64, u8>(4_000, 128, -6_000);
+        byte_vec_gen::<i64, u8>(4_000, 256, -7_000);
+        byte_vec_gen::<i64, u8>(16_000, 1024, -50_000);
+        byte_vec_gen::<i64, u8>(16_000, 2048, -60_000);
+        byte_vec_gen::<i64, u8>(16_000, 4096, -70_000);
+        byte_vec_gen::<i64, u8>(128_000, 65_000, -500_000);
+        byte_vec_gen::<i64, u8>(128_000, 130_000, -600_000);
+        byte_vec_gen::<i64, u8>(128_000, 260_000, -700_000);
+        byte_vec_gen::<i64, u8>(1_000_000, 1_000_000, -5_000_000);
+        byte_vec_gen::<i64, u8>(1_000_000, 400_000_000, -6_000_000);
+        byte_vec_gen::<i64, u8>(1_000_000, 8_000_000_000, -7_000_000);
+    }
+
+    #[test]
+    fn byte_vec_i64_u16() {
+        byte_vec_gen::<i64, u16>(1_000, 1, -500);
+        byte_vec_gen::<i64, u16>(1_000, 2, -600);
+        byte_vec_gen::<i64, u16>(1_000, 4, -700);
+        byte_vec_gen::<i64, u16>(1_000, 8, -800);
+        byte_vec_gen::<i64, u16>(1_000, 16, -900);
+        byte_vec_gen::<i64, u16>(1_000, 24, -950);
+        byte_vec_gen::<i64, u16>(4_000, 32, -5_000);
+        byte_vec_gen::<i64, u16>(4_000, 64, -6_000);
+        byte_vec_gen::<i64, u16>(4_000, 128, -7_000);
+        byte_vec_gen::<i64, u16>(16_000, 1024, -50_000);
+        byte_vec_gen::<i64, u16>(16_000, 2048, -60_000);
+        byte_vec_gen::<i64, u16>(16_000, 4096, -70_000);
+        byte_vec_gen::<i64, u16>(128_000, 65_000, -500_000);
+        byte_vec_gen::<i64, u16>(128_000, 130_000, -600_000);
+        byte_vec_gen::<i64, u16>(128_000, 260_000, -700_000);
+        byte_vec_gen::<i64, u16>(1_000_000, 1_000_000, -5_000_000);
+        byte_vec_gen::<i64, u16>(1_000_000, 400_000_000, -6_000_000);
+        byte_vec_gen::<i64, u16>(1_000_000, 8_000_000_000, -7_000_000);
+    }
+
+    #[test]
+    fn byte_vec_i64_u32() {
+        byte_vec_gen::<i64, u32>(1_000, 1, -500);
+        byte_vec_gen::<i64, u32>(1_000, 2, -600);
+        byte_vec_gen::<i64, u32>(1_000, 4, -700);
+        byte_vec_gen::<i64, u32>(1_000, 8, -800);
+        byte_vec_gen::<i64, u32>(1_000, 16, -900);
+        byte_vec_gen::<i64, u32>(1_000, 24, -950);
+        byte_vec_gen::<i64, u32>(4_000, 32, -5_000);
+        byte_vec_gen::<i64, u32>(4_000, 64, -6_000);
+        byte_vec_gen::<i64, u32>(4_000, 128, -7_000);
+        byte_vec_gen::<i64, u32>(16_000, 1024, -50_000);
+        byte_vec_gen::<i64, u32>(16_000, 2048, -60_000);
+        byte_vec_gen::<i64, u32>(16_000, 4096, -70_000);
+        byte_vec_gen::<i64, u32>(128_000, 65_000, -500_000);
+        byte_vec_gen::<i64, u32>(128_000, 130_000, -600_000);
+        byte_vec_gen::<i64, u32>(128_000, 260_000, -700_000);
+        byte_vec_gen::<i64, u32>(1_000_000, 1_000_000, -5_000_000);
+        byte_vec_gen::<i64, u32>(1_000_000, 400_000_000, -6_000_000);
+        byte_vec_gen::<i64, u32>(1_000_000, 8_000_000_000, -7_000_000);
+    }
+
+    #[test]
+    fn byte_vec_isize() {
+        byte_vec_gen::<isize, u8>(128_000, 32, -500);
+        byte_vec_gen::<isize, u8>(128_000, 64, -600);
+        byte_vec_gen::<isize, u8>(128_000, 128, -700);
+        byte_vec_gen::<isize, u16>(128_000, 32, -5_000);
+        byte_vec_gen::<isize, u16>(128_000, 64, -6_000);
+        byte_vec_gen::<isize, u16>(128_000, 128, -7_000);
+        byte_vec_gen::<isize, u32>(128_000, 256, -50_000);
+        byte_vec_gen::<isize, u32>(128_000, 1024, -60_000);
+        byte_vec_gen::<isize, u32>(128_000, 4096, -70_000);
+        byte_vec_gen::<isize, u32>(128_000, 1_000_000, -8_000_000);
     }
 }

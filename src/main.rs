@@ -3,7 +3,6 @@ use compvec::bytevec::*;
 use compvec::bitvec::*;
 use compvec::types::*;
 use compvec::veclike::*;
-//use std::thread::sleep_ms;
 use std::time::SystemTime;
 
 /// A simple performance test.
@@ -30,6 +29,16 @@ where
 
 fn main() {
     {
+// Values will be stored in 10 bits and the maximum value is 1,023
+let mut bitvec = BitVec::<usize, u8>::with_max_value(4, 1_000);
+bitvec.push(100);
+bitvec.push(200);
+bitvec.push(400);
+// This will increase the number of bits per value to 11 bits
+bitvec.push(2_000);
+println!("{:?}", bitvec); // Prints "400"
+    }
+    {
         const N: usize = 200_000_000;
         let mut bool_vec_ref = vec![false; N];
         for i in 0..N {
@@ -44,16 +53,19 @@ fn main() {
         println!("BoolVec {sum} {} ms", now.elapsed().unwrap().as_millis());
     }
     {
-        let n = 60_000_000;
+        let n = 120_000_000;
         let mut byte_vec_ref = vec![0; n];
         for i in 0..n {
             byte_vec_ref[i] = i as u64;
         }
+        println!("Performance test Vec");
         perf(&byte_vec_ref);
         let byte_vec = ByteVec::<u64, u8>::from(byte_vec_ref.clone());
+        println!("Performance test ByteVec");
         println!("Stride elements {}", byte_vec.stride());
         perf(&byte_vec);
         let bit_vec = BitVec::<u64, u8>::from(byte_vec_ref.clone());
+        println!("Performance test BitVec");
         println!("Stride bits {}", bit_vec.stride_bits());
         perf(&bit_vec);
     }
