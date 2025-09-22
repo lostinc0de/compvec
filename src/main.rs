@@ -29,16 +29,6 @@ where
 
 fn main() {
     {
-// Values will be stored in 10 bits and the maximum value is 1,023
-let mut bitvec = BitVec::<usize, u8>::with_max_value(4, 1_000);
-bitvec.push(100);
-bitvec.push(200);
-bitvec.push(400);
-// This will increase the number of bits per value to 11 bits
-bitvec.push(2_000);
-println!("{:?}", bitvec); // Prints "400"
-    }
-    {
         const N: usize = 200_000_000;
         let mut bool_vec_ref = vec![false; N];
         for i in 0..N {
