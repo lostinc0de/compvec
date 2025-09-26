@@ -520,45 +520,45 @@ mod tests {
     where
         T: FromTruncated<U> + IntoTruncated<U>,
     {
-        let mut byte_vec_ref = vec![T::ZERO; n];
+        let mut vec_ref = vec![T::ZERO; n];
         for i in 0..n {
-            byte_vec_ref[i] = T::from((i % u8::MAX as usize) as u8) * mul + offset;
+            vec_ref[i] = T::from((i % u8::MAX as usize) as u8) * mul + offset;
         }
         // Test copying from the reference vec
-        let byte_vec = ByteVec::<T, U>::from(byte_vec_ref.clone());
+        let byte_vec = ByteVec::<T, U>::from(vec_ref.clone());
         for i in 0..n {
-            assert_eq!(byte_vec_ref[i], byte_vec.get(i));
+            assert_eq!(vec_ref[i], byte_vec.get(i));
         }
         // Test iterator
-        assert_eq!(byte_vec.iterate().max(), byte_vec_ref.iterate().max());
-        for (v0, v1) in byte_vec.iterate().zip(byte_vec_ref.iterate()) {
+        assert_eq!(byte_vec.iterate().max(), vec_ref.iterate().max());
+        for (v0, v1) in byte_vec.iterate().zip(vec_ref.iterate()) {
             assert_eq!(v0, v1);
         }
         // Test by pushing values
         let mut byte_vec = ByteVec::<T, U>::new();
         for i in 0..n {
-            byte_vec.push(byte_vec_ref[i]);
-            assert_eq!(byte_vec_ref[i], byte_vec.get(i));
+            byte_vec.push(vec_ref[i]);
+            assert_eq!(vec_ref[i], byte_vec.get(i));
         }
-        assert_eq!(byte_vec_ref.len(), byte_vec.len());
+        assert_eq!(vec_ref.len(), byte_vec.len());
         // Test inserting values
         for i in (0..n).step_by(n / 16) {
-            byte_vec_ref.insert(i, byte_vec_ref[i]);
+            vec_ref.insert(i, vec_ref[i]);
             byte_vec.insert(i, byte_vec.get(i));
         }
-        assert_eq!(byte_vec_ref.len(), byte_vec.len());
-        for i in 0..byte_vec_ref.len() {
-            assert_eq!(byte_vec_ref[i], byte_vec.get(i));
+        assert_eq!(vec_ref.len(), byte_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], byte_vec.get(i));
         }
         // Test removing values
         for i in (0..n).step_by(n / 16) {
-            let v0 = byte_vec_ref.remove(i);
+            let v0 = vec_ref.remove(i);
             let v1 = byte_vec.remove(i);
             assert_eq!(v0, v1);
         }
-        assert_eq!(byte_vec_ref.len(), byte_vec.len());
-        for i in 0..byte_vec_ref.len() {
-            assert_eq!(byte_vec_ref[i], byte_vec.get(i));
+        assert_eq!(vec_ref.len(), byte_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], byte_vec.get(i));
         }
     }
     

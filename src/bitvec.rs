@@ -292,45 +292,45 @@ mod tests {
     where
         T: FromTruncated<U> + IntoTruncated<U>,
     {
-        let mut bit_vec_ref = vec![T::ZERO; n];
+        let mut vec_ref = vec![T::ZERO; n];
         for i in 0..n {
-            bit_vec_ref[i] = T::from((i as u8) % u8::MAX) * mul + offset;
+            vec_ref[i] = T::from((i as u8) % u8::MAX) * mul + offset;
         }
-        let mut bit_vec = BitVec::<T, U>::from(bit_vec_ref.clone());
+        let mut bit_vec = BitVec::<T, U>::from(vec_ref.clone());
         for i in 0..n {
-            assert_eq!(bit_vec.get(i), bit_vec_ref.get(i));
+            assert_eq!(bit_vec.get(i), vec_ref.get(i));
         }
         // Test iterator
-        assert_eq!(bit_vec.iterate().max(), bit_vec_ref.iterate().max());
-        for (v0, v1) in bit_vec.iterate().zip(bit_vec_ref.iterate()) {
+        assert_eq!(bit_vec.iterate().max(), vec_ref.iterate().max());
+        for (v0, v1) in bit_vec.iterate().zip(vec_ref.iterate()) {
             assert_eq!(v0, v1);
         }
         // Test pushing values
-        let max = bit_vec_ref.iter().cloned().max().unwrap_or(T::ZERO);
+        let max = vec_ref.iter().cloned().max().unwrap_or(T::ZERO);
         for i in 0..n {
-            let val = max - bit_vec_ref.get(i);
+            let val = max - vec_ref.get(i);
             bit_vec.push(val);
-            bit_vec_ref.push(val);
-            assert_eq!(bit_vec.get(n + i), bit_vec_ref[n + i]);
+            vec_ref.push(val);
+            assert_eq!(bit_vec.get(n + i), vec_ref[n + i]);
         }
         // Test inserting values
         for i in (0..n).step_by(n / 16) {
-            bit_vec_ref.insert(i, bit_vec_ref[i]);
+            vec_ref.insert(i, vec_ref[i]);
             bit_vec.insert(i, bit_vec.get(i));
         }
-        assert_eq!(bit_vec_ref.len(), bit_vec.len());
-        for i in 0..bit_vec_ref.len() {
-            assert_eq!(bit_vec_ref[i], bit_vec.get(i));
+        assert_eq!(vec_ref.len(), bit_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], bit_vec.get(i));
         }
         // Test removing values
         for i in (0..n).step_by(n / 8) {
-            let v0 = bit_vec_ref.remove(i);
+            let v0 = vec_ref.remove(i);
             let v1 = bit_vec.remove(i);
             assert_eq!(v0, v1);
         }
-        assert_eq!(bit_vec_ref.len(), bit_vec.len());
-        for i in 0..bit_vec_ref.len() {
-            assert_eq!(bit_vec_ref[i], bit_vec.get(i));
+        assert_eq!(vec_ref.len(), bit_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], bit_vec.get(i));
         }
     }
     

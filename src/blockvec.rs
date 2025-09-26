@@ -19,7 +19,7 @@ impl<V: VecLike> BlockVec<V> {
     /// Constructs an empty BlockVec with specified block length and reserves space for c values.
     fn with_block_len(c: usize, len_block: usize) -> Self {
         let n_blocks = c / len_block + 1;
-        let blocks = vec![V::with_capacity(len_block); n_blocks];
+        let blocks = Vec::<V>::with_capacity(n_blocks);
         Self { n: 0, len_block, blocks }
     }
 }
@@ -59,7 +59,14 @@ impl<V: VecLike> VecLike for BlockVec<V> {
         if self.blocks.len() == 0 {
             self.blocks.push(V::with_capacity(self.len_block));
         }
-        let ind_last_block = self.blocks.len() - 1;
+        let ind_last_block = {
+            // Check if the last block has capacity
+            let ind_last_bl = self.blocks.len() - 1;
+            if self.blocks[ind_last_bl].len() == self.len_block {
+                self.blocks.push(V::with_capacity(self.len_block));
+            }
+            self.blocks.len() - 1
+        };
         self.blocks[ind_last_block].push(val);
         self.n += 1;
     }
@@ -90,10 +97,12 @@ impl<V: VecLike> VecLike for BlockVec<V> {
         let n_blocks_new = new_len / self.len_block;
         let res = new_len - n_blocks_new * self.len_block;
         if res > 0 {
+            // We need an additional block for the remaining values
             self.blocks.resize(n_blocks_new + 1, V::from(vec![value; self.len_block]));
             let ind_last_block = self.blocks.len() - 1;
             self.blocks[ind_last_block].resize(res, value);
         } else {
+            // All values fit into the blocks
             self.blocks.resize(n_blocks_new, V::from(vec![value; self.len_block]));
         }
         self.n = new_len;
@@ -120,4 +129,38 @@ impl<V: VecLike> VecLike for BlockVec<V> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bytevec::ByteVec;
+    use crate::types::Integer;
+
+    fn block_vec_gen<V: VecLike>(n: usize, len_block: usize, mul: V::Type, offset: V::Type) 
+    where V::Type: Integer + From<u8> {
+        let mut block_vec = BlockVec::<V>::with_block_len(n, len_block);
+        let mut vec_ref = vec![];
+        for i in 0..n {
+            let val = V::Type::from((i % u8::MAX as usize) as u8) * mul + offset;
+            block_vec.push(val);
+            vec_ref.push(val);
+        }
+        assert_eq!(vec_ref.len(), block_vec.len());
+        for i in 0..n {
+            assert_eq!(vec_ref.get(i), block_vec.get(i));
+        }
+        block_vec.clear();
+        block_vec = BlockVec::<V>::from(vec_ref.clone());
+        assert_eq!(vec_ref.len(), block_vec.len());
+        for i in 0..n {
+            assert_eq!(vec_ref.get(i), block_vec.get(i));
+        }
+    }
+
+    #[test]
+    fn block_vec_byte_vec() {
+        block_vec_gen::<ByteVec<u16, u8>>(1000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u16, u8>>(1000, 200, 1, 400);
+        block_vec_gen::<ByteVec<u32, u8>>(1000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u32, u16>>(1000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u64, u8>>(1000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u64, u16>>(1000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u64, u32>>(1000, 64, 1, 0);
+    }
 }

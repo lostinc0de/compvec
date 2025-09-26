@@ -147,51 +147,51 @@ mod tests {
     #[test]
     fn bool_vec() {
         const N: usize = 1000;
-        let mut bool_vec_ref = vec![false; N];
-        let mut bool_vec = BoolVec::from(bool_vec_ref.clone());
-        assert_eq!(bool_vec_ref.len(), bool_vec.len());
-        assert_eq!(bool_vec_ref.len(), N);
+        let mut vec_ref = vec![false; N];
+        let mut bool_vec = BoolVec::from(vec_ref.clone());
+        assert_eq!(vec_ref.len(), bool_vec.len());
+        assert_eq!(vec_ref.len(), N);
         for i in 0..N {
-            assert_eq!(bool_vec_ref[i], bool_vec.get(i));
+            assert_eq!(vec_ref[i], bool_vec.get(i));
             assert_eq!(bool_vec.get(i), false);
         }
         for i in 0..N {
             if i % 2 == 0 {
-                bool_vec_ref[i] = true;
+                vec_ref[i] = true;
                 bool_vec.set(i, true);
             }
         }
         for i in 0..N {
-            assert_eq!(bool_vec_ref[i], bool_vec.get(i));
-            bool_vec_ref.push(i % 3 == 0);
+            assert_eq!(vec_ref[i], bool_vec.get(i));
+            vec_ref.push(i % 3 == 0);
             bool_vec.push(i % 3 == 0);
         }
         for i in 0..(2 * N) {
-            assert_eq!(bool_vec_ref[i], bool_vec.get(i));
+            assert_eq!(vec_ref[i], bool_vec.get(i));
         }
         // Test inserting values
         for i in (0..N).step_by(N / 16) {
-            bool_vec_ref.insert(i, bool_vec_ref[i]);
+            vec_ref.insert(i, vec_ref[i]);
             bool_vec.insert(i, bool_vec.get(i));
         }
-        assert_eq!(bool_vec_ref.len(), bool_vec.len());
-        for i in 0..bool_vec_ref.len() {
-            assert_eq!(bool_vec_ref[i], bool_vec.get(i));
+        assert_eq!(vec_ref.len(), bool_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], bool_vec.get(i));
         }
         // Test removing values
         for i in (0..N).step_by(N / 16) {
-            let v0 = bool_vec_ref.remove(i);
+            let v0 = vec_ref.remove(i);
             let v1 = bool_vec.remove(i);
             assert_eq!(v0, v1);
         }
-        assert_eq!(bool_vec_ref.len(), bool_vec.len());
-        for i in 0..bool_vec_ref.len() {
-            assert_eq!(bool_vec_ref[i], bool_vec.get(i));
+        assert_eq!(vec_ref.len(), bool_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], bool_vec.get(i));
         }
         // Pop until the containers are empty
-        while !bool_vec_ref.is_empty() {
-            assert_eq!(bool_vec_ref.pop(), bool_vec.pop());
-            assert_eq!(bool_vec_ref.len(), bool_vec.len());
+        while !vec_ref.is_empty() {
+            assert_eq!(vec_ref.pop(), bool_vec.pop());
+            assert_eq!(vec_ref.len(), bool_vec.len());
         }
     }
 }
