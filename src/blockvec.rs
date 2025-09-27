@@ -60,7 +60,7 @@ impl<V: VecLike> VecLike for BlockVec<V> {
             self.blocks.push(V::with_capacity(self.len_block));
         }
         let ind_last_block = {
-            // Check if the last block has capacity
+            // Check if the last block has enough capacity
             let ind_last_bl = self.blocks.len() - 1;
             if self.blocks[ind_last_bl].len() == self.len_block {
                 self.blocks.push(V::with_capacity(self.len_block));
@@ -130,6 +130,7 @@ impl<V: VecLike> VecLike for BlockVec<V> {
 mod tests {
     use super::*;
     use crate::bytevec::ByteVec;
+    use crate::bitvec::BitVec;
     use crate::types::Integer;
 
     fn block_vec_gen<V: VecLike>(n: usize, len_block: usize, mul: V::Type, offset: V::Type) 
@@ -154,13 +155,122 @@ mod tests {
     }
 
     #[test]
-    fn block_vec_byte_vec() {
-        block_vec_gen::<ByteVec<u16, u8>>(1000, 64, 1, 0);
-        block_vec_gen::<ByteVec<u16, u8>>(1000, 200, 1, 400);
-        block_vec_gen::<ByteVec<u32, u8>>(1000, 64, 1, 0);
-        block_vec_gen::<ByteVec<u32, u16>>(1000, 64, 1, 0);
-        block_vec_gen::<ByteVec<u64, u8>>(1000, 64, 1, 0);
-        block_vec_gen::<ByteVec<u64, u16>>(1000, 64, 1, 0);
-        block_vec_gen::<ByteVec<u64, u32>>(1000, 64, 1, 0);
+    fn block_vec_byte_vec_unsigned() {
+        block_vec_gen::<ByteVec<u16, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u16, u8>>(1_000, 200, 1, 400);
+        block_vec_gen::<ByteVec<u16, u8>>(10_000, 200, 1, 400);
+        block_vec_gen::<ByteVec<u32, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u32, u8>>(1_000, 128, 12, 800);
+        block_vec_gen::<ByteVec<u32, u8>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<ByteVec<u32, u8>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<ByteVec<u32, u16>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u32, u16>>(1_000, 128, 12, 800);
+        block_vec_gen::<ByteVec<u32, u16>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<ByteVec<u32, u16>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<ByteVec<u64, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u64, u8>>(1_000, 128, 12, 800);
+        block_vec_gen::<ByteVec<u64, u8>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<ByteVec<u64, u8>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<ByteVec<u64, u8>>(100_000, 8_000, 9_600, 8_000_000);
+        block_vec_gen::<ByteVec<u64, u16>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u64, u16>>(1_000, 128, 12, 800);
+        block_vec_gen::<ByteVec<u64, u16>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<ByteVec<u64, u16>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<ByteVec<u64, u16>>(100_000, 8_000, 9_600, 8_000_000);
+        block_vec_gen::<ByteVec<u64, u32>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<u64, u32>>(1_000, 128, 12, 800);
+        block_vec_gen::<ByteVec<u64, u32>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<ByteVec<u64, u32>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<ByteVec<u64, u32>>(100_000, 8_000, 9_600, 8_000_000);
+    }
+
+    #[test]
+    fn block_vec_byte_vec_signed() {
+        block_vec_gen::<ByteVec<i16, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<i16, u8>>(1_000, 200, 1, -400);
+        block_vec_gen::<ByteVec<i16, u8>>(10_000, 200, 1, -400);
+        block_vec_gen::<ByteVec<i32, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<i32, u8>>(1_000, 128, 12, -800);
+        block_vec_gen::<ByteVec<i32, u8>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<ByteVec<i32, u8>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<ByteVec<i32, u16>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<i32, u16>>(1_000, 128, 12, -800);
+        block_vec_gen::<ByteVec<i32, u16>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<ByteVec<i32, u16>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<ByteVec<i64, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<i64, u8>>(1_000, 128, 12, -800);
+        block_vec_gen::<ByteVec<i64, u8>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<ByteVec<i64, u8>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<ByteVec<i64, u8>>(100_000, 8_000, 9_600, -8_000_000);
+        block_vec_gen::<ByteVec<i64, u16>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<i64, u16>>(1_000, 128, 12, -800);
+        block_vec_gen::<ByteVec<i64, u16>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<ByteVec<i64, u16>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<ByteVec<i64, u16>>(100_000, 8_000, 9_600, -8_000_000);
+        block_vec_gen::<ByteVec<i64, u32>>(1_000, 64, 1, 0);
+        block_vec_gen::<ByteVec<i64, u32>>(1_000, 128, 12, -800);
+        block_vec_gen::<ByteVec<i64, u32>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<ByteVec<i64, u32>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<ByteVec<i64, u32>>(100_000, 8_000, 9_600, -8_000_000);
+    }
+
+    #[test]
+    fn block_vec_bit_vec_unsigned() {
+        block_vec_gen::<BitVec<u16, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<u16, u8>>(1_000, 200, 1, 400);
+        block_vec_gen::<BitVec<u16, u8>>(10_000, 200, 1, 400);
+        block_vec_gen::<BitVec<u32, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<u32, u8>>(1_000, 128, 12, 800);
+        block_vec_gen::<BitVec<u32, u8>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<BitVec<u32, u8>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<BitVec<u32, u16>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<u32, u16>>(1_000, 128, 12, 800);
+        block_vec_gen::<BitVec<u32, u16>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<BitVec<u32, u16>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<BitVec<u64, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<u64, u8>>(1_000, 128, 12, 800);
+        block_vec_gen::<BitVec<u64, u8>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<BitVec<u64, u8>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<BitVec<u64, u8>>(100_000, 8_000, 9_600, 8_000_000);
+        block_vec_gen::<BitVec<u64, u16>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<u64, u16>>(1_000, 128, 12, 800);
+        block_vec_gen::<BitVec<u64, u16>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<BitVec<u64, u16>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<BitVec<u64, u16>>(100_000, 8_000, 9_600, 8_000_000);
+        block_vec_gen::<BitVec<u64, u32>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<u64, u32>>(1_000, 128, 12, 800);
+        block_vec_gen::<BitVec<u64, u32>>(10_000, 200, 2_400, 80_000);
+        block_vec_gen::<BitVec<u64, u32>>(100_000, 4_000, 4_800, 800_000);
+        block_vec_gen::<BitVec<u64, u32>>(100_000, 8_000, 9_600, 8_000_000);
+    }
+
+    #[test]
+    fn block_vec_bit_vec_signed() {
+        block_vec_gen::<BitVec<i16, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<i16, u8>>(1_000, 200, 1, -400);
+        block_vec_gen::<BitVec<i16, u8>>(10_000, 200, 1, -400);
+        block_vec_gen::<BitVec<i32, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<i32, u8>>(1_000, 128, 12, -800);
+        block_vec_gen::<BitVec<i32, u8>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<BitVec<i32, u8>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<BitVec<i32, u16>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<i32, u16>>(1_000, 128, 12, -800);
+        block_vec_gen::<BitVec<i32, u16>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<BitVec<i32, u16>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<BitVec<i64, u8>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<i64, u8>>(1_000, 128, 12, -800);
+        block_vec_gen::<BitVec<i64, u8>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<BitVec<i64, u8>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<BitVec<i64, u8>>(100_000, 8_000, 9_600, -8_000_000);
+        block_vec_gen::<BitVec<i64, u16>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<i64, u16>>(1_000, 128, 12, -800);
+        block_vec_gen::<BitVec<i64, u16>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<BitVec<i64, u16>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<BitVec<i64, u16>>(100_000, 8_000, 9_600, -8_000_000);
+        block_vec_gen::<BitVec<i64, u32>>(1_000, 64, 1, 0);
+        block_vec_gen::<BitVec<i64, u32>>(1_000, 128, 12, -800);
+        block_vec_gen::<BitVec<i64, u32>>(10_000, 200, 2_400, -80_000);
+        block_vec_gen::<BitVec<i64, u32>>(100_000, 4_000, 4_800, -800_000);
+        block_vec_gen::<BitVec<i64, u32>>(100_000, 8_000, 9_600, -8_000_000);
     }
 }

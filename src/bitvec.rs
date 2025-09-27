@@ -127,10 +127,11 @@ where
     type Type = T;
 
     fn with_capacity(n: usize) -> Self {
+        let (_, stride_bits) = Self::compute_max_value_and_stride(T::ZERO);
         Self {
             values: Vec::<U>::with_capacity(n),
             max: T::ONE,
-            stride_bits: 1,
+            stride_bits,
             n: 0,
             masks: Self::masks(),
         }
