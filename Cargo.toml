@@ -2,5 +2,11 @@
 name = "compvec"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Compressing integer vectors"
+homepage = "https://github.com/lostinc0de/compvec"
+repository = "https://github.com/lostinc0de/compvec"
+readme = "README.md"
+keywords = ["integer", "compression"]
 
 [dependencies]

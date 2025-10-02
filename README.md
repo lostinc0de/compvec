@@ -51,7 +51,7 @@ To make this clear, let's have a look at the first bytes:
 So the actual bit pattern for the first and second value is 00100110000 and 00010011000, starting with the lowest bit from the left.
 
 ### BoolVec
-Additionally compvec provides a structure for storing booleans bytewise.
+Additionally compvec provides a structure for storing booleans bitwise.
 Eight bools are written to a single byte:
 
 ```rust
@@ -61,6 +61,10 @@ println!("{}", boolvec.get(4)); // Prints "false"
 ```
 
 ## Notes
+### A word on bitpacking
+Using the crate *bitpacking* you can compress a sequence of 32 bit unsigned integers into bytes efficiently with SIMD. I was looking for a generic solution for storing any type of signed and unsigned integers. *compvec* accomplishes that in a simple way.
+Sure, one could use a wrapper, such that any integer type is first encoded into a Vec of u32. But I don't think it's applicable.
+
 ### Running tests
 There are a lot of tests and running all of them may take some time, depending on your hardware. It is recommended to run the tests in release mode:
 
