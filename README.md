@@ -21,7 +21,14 @@ bytevec.push(100_000);
 println!("{:?}", bytevec);
 ```
 
-So the third value 999 is encoded in the three bytes 231, 3 and 0. If we decode it using the get() function, these three bytes are multiplied and summed up: 231 + 3 * 2^8 + 0 * 2^16 = 231 + 3 * 256 + 0 * 65536 = 999.
+So let's have a look at the third value 999: It's encoded in the three bytes 231, 3 and 0.
+
+|            | 231   | 3     | 0     |
+| -----      | ----- | ----- | ----- |
+| Multiplier | 1     | 256   | 65536 |
+| Index      | 2     | 2     | 2     |
+
+If we decode it using the get() function, these three bytes are multiplied and summed up: 231 + 3 * 2^8 + 0 * 2^16 = 231 + 3 * 256 + 0 * 65536 = 999.
 
 ### BitVec
 For storing values in a more space-efficient way, we can use the BitVec. Every value will only use the number of bits of the maximum value in the set. If you don't have values larger than 1,000, every integer will consume 10 bits of memory.
@@ -40,24 +47,25 @@ println!("{:?}", bitvec);
 ```
 
 The first value 100 is encoded in the first byte and takes up three more zero bits in the second byte.
-To make this clear, let's have a look at the first bytes:
+To make this clear, let's have a look at the first three bytes:
 
-|          | 100      | 64       | 6        |
-| -------- | -------- | -------- | -------- |
-| Position | 01234567 | 01234567 | 01234567 |
-| Pattern  | 00100110 | 00000010 | 01100000 |
-| Index    | 00000000 | 00011111 | 11111122 |
+|                    | 100      | 64       | 6        |
+| --------           | -------- | -------- | -------- |
+| Local bit position | 01234567 | 01234567 | 01234567 |
+| Binary value       | 00100110 | 00000010 | 01100000 |
+| Index              | 00000000 | 00011111 | 11111122 |
 
 So the actual bit pattern for the first and second value is 00100110000 and 00010011000, starting with the lowest bit from the left.
 
 ### BoolVec
-Additionally compvec provides a structure for storing booleans bitwise.
+Additionally *compvec* provides a structure for storing booleans bitwise.
 Eight bools are written to a single byte:
 
 ```rust
 let mut boolvec = BoolVec::from(vec![false, true, false, true, false, true]);
 boolvec.push(true);
-println!("{}", boolvec.get(4)); // Prints "false"
+// Prints "false"
+println!("{}", boolvec.get(4));
 ```
 
 ## Notes
