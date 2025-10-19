@@ -16,16 +16,12 @@ where
 impl<T: Integer, U: Integer> BitVec<T, U>
 where
     T: FromTruncated<U> + IntoTruncated<U>,
-    Self: VecLike
+    Self: VecLike,
 {
     /// Returns the maximum value and the new stride in bits, such that val fits.
     fn compute_max_value_and_stride(val: T) -> (T, u64) {
         // Define the number of bits without the sign bit
-        let n_bits_filled = if T::SIGNED {
-            T::N_BITS - 1
-        } else {
-            T::N_BITS
-        };
+        let n_bits_filled = if T::SIGNED { T::N_BITS - 1 } else { T::N_BITS };
         let mut stride = 1;
         let mut max = (T::ONE << stride) - T::ONE;
         while max < val.abs() {
@@ -43,7 +39,7 @@ where
         }
         (max, stride as u64)
     }
-    
+
     /// Resizes the underlying Vec of smaller integers, if val is too large.
     fn check_and_resize(&mut self, val: T) {
         if val.abs() > self.max {
@@ -70,7 +66,12 @@ where
         let end_el = end_bit_global / U::N_BITS_U64;
         let start_bit = start_bit_global - start_el * U::N_BITS_U64;
         let end_bit = end_bit_global - end_el * U::N_BITS_U64;
-        (start_el as usize, end_el as usize, start_bit as usize, end_bit as usize)
+        (
+            start_el as usize,
+            end_el as usize,
+            start_bit as usize,
+            end_bit as usize,
+        )
     }
 
     /// Returns a bit vec container with a maximum value.
@@ -101,7 +102,7 @@ where
         }
         ret
     }
-    
+
     /// Returns the mask filled with ones from start_bit to end_bit.
     pub fn mask(&self, start_bit: usize, end_bit: usize) -> U {
         if end_bit < start_bit {
@@ -181,7 +182,7 @@ where
         }
         ret
     }
-    
+
     fn set(&mut self, i: usize, val: T) {
         self.check_and_resize(val);
         let (start_el, end_el, start_bit, end_bit) = self.comp_pos(i);
@@ -218,7 +219,7 @@ where
             }
         }
     }
-    
+
     fn push(&mut self, val: T) {
         // Compute the index of the last element, if value gets pushed
         let end_bit_global = (self.n as u64 + 1) * self.stride_bits - 1;
@@ -333,8 +334,27 @@ mod tests {
         for i in 0..vec_ref.len() {
             assert_eq!(vec_ref[i], bit_vec.get(i));
         }
+        // Test extending from a slice
+        let slc = &[vec_ref[0], vec_ref[1], vec_ref[n - 1]];
+        vec_ref.extend_from_slice(slc);
+        bit_vec.extend_from_slice(slc);
+        let offset = vec_ref.len() - slc.len();
+        for i in 0..slc.len() {
+            assert_eq!(vec_ref.get(offset + i), slc[i]);
+            assert_eq!(bit_vec.get(offset + i), slc[i]);
+        }
+        // Test splitting off
+        let at = vec_ref.len() - slc.len();
+        let splt_ref = vec_ref.split_off(at);
+        let splt_byte_vec = bit_vec.split_off(at);
+        assert_eq!(splt_ref.len(), splt_byte_vec.len());
+        assert_eq!(vec_ref.len(), bit_vec.len());
+        for i in 0..slc.len() {
+            assert_eq!(splt_ref.get(i), slc[i]);
+            assert_eq!(splt_byte_vec.get(i), slc[i]);
+        }
     }
-    
+
     #[test]
     fn bit_vec_u16_u8() {
         bit_vec_gen::<u16, u8>(1_000, 1, 0);
@@ -694,7 +714,11 @@ mod tests {
         bit_vec_gen::<i128, u8>(1_000_000, 1_000_000, -5_000_000);
         bit_vec_gen::<i128, u8>(1_000_000, 400_000_000, -6_000_000);
         bit_vec_gen::<i128, u8>(1_000_000, 8_000_000_000, -7_000_000);
-        bit_vec_gen::<i128, u8>(1_000_000, 16_000_000_000_000_000_000, -8_000_000_000_000_000);
+        bit_vec_gen::<i128, u8>(
+            1_000_000,
+            16_000_000_000_000_000_000,
+            -8_000_000_000_000_000,
+        );
     }
 
     #[test]
@@ -717,7 +741,11 @@ mod tests {
         bit_vec_gen::<i128, u16>(1_000_000, 1_000_000, -5_000_000);
         bit_vec_gen::<i128, u16>(1_000_000, 400_000_000, -6_000_000);
         bit_vec_gen::<i128, u16>(1_000_000, 8_000_000_000, -7_000_000);
-        bit_vec_gen::<i128, u16>(1_000_000, 16_000_000_000_000_000_000, -8_000_000_000_000_000);
+        bit_vec_gen::<i128, u16>(
+            1_000_000,
+            16_000_000_000_000_000_000,
+            -8_000_000_000_000_000,
+        );
     }
 
     #[test]
@@ -740,7 +768,11 @@ mod tests {
         bit_vec_gen::<i128, u32>(1_000_000, 1_000_000, -5_000_000);
         bit_vec_gen::<i128, u32>(1_000_000, 400_000_000, -6_000_000);
         bit_vec_gen::<i128, u32>(1_000_000, 8_000_000_000, -7_000_000);
-        bit_vec_gen::<i128, u32>(1_000_000, 16_000_000_000_000_000_000, -8_000_000_000_000_000);
+        bit_vec_gen::<i128, u32>(
+            1_000_000,
+            16_000_000_000_000_000_000,
+            -8_000_000_000_000_000,
+        );
     }
 
     #[test]
@@ -763,7 +795,11 @@ mod tests {
         bit_vec_gen::<i128, u64>(1_000_000, 1_000_000, -5_000_000);
         bit_vec_gen::<i128, u64>(1_000_000, 400_000_000, -6_000_000);
         bit_vec_gen::<i128, u64>(1_000_000, 8_000_000_000, -7_000_000);
-        bit_vec_gen::<i128, u64>(1_000_000, 16_000_000_000_000_000_000, -8_000_000_000_000_000);
+        bit_vec_gen::<i128, u64>(
+            1_000_000,
+            16_000_000_000_000_000_000,
+            -8_000_000_000_000_000,
+        );
     }
 
     #[test]

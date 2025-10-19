@@ -1,8 +1,11 @@
 use crate::error::CompVecError;
 use std::cmp::Ord;
-use std::fmt::{Debug, Display, Binary};
+use std::fmt::{Binary, Debug, Display};
 use std::iter::Sum;
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign, Shl, Shr, BitAnd, BitOr, BitAndAssign, BitOrAssign, Not};
+use std::ops::{
+    Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Not,
+    Shl, Shr, Sub, SubAssign,
+};
 
 pub trait Integer
 where

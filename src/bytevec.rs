@@ -282,33 +282,32 @@ where
         self.values[start] = val_abs.into_trunc();
         // Loop unrolling for performance
         match self.stride {
-            1 => {
-            },
+            1 => {}
             2 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-            },
+            }
             3 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-            },
+            }
             4 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
                 self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-            },
+            }
             5 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
                 self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
                 self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-            },
+            }
             6 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
                 self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
                 self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
                 self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-            },
+            }
             7 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -316,7 +315,7 @@ where
                 self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
                 self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
                 self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-            },
+            }
             8 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -325,7 +324,7 @@ where
                 self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
                 self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
                 self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-            },
+            }
             9 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -335,7 +334,7 @@ where
                 self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
                 self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
                 self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
-            },
+            }
             10 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -346,7 +345,7 @@ where
                 self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
                 self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
                 self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
-            },
+            }
             11 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -358,7 +357,7 @@ where
                 self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
                 self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
                 self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
-            },
+            }
             12 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -371,7 +370,7 @@ where
                 self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
                 self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
                 self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
-            },
+            }
             13 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -385,7 +384,7 @@ where
                 self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
                 self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
                 self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
-            },
+            }
             14 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -400,7 +399,7 @@ where
                 self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
                 self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
                 self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
-            },
+            }
             15 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -416,7 +415,7 @@ where
                 self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
                 self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
                 self.values[start + 14] = (val_abs >> 14 * U::N_BITS).into_trunc();
-            },
+            }
             16 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
                 self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
@@ -433,7 +432,7 @@ where
                 self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
                 self.values[start + 14] = (val_abs >> 14 * U::N_BITS).into_trunc();
                 self.values[start + 15] = (val_abs >> 15 * U::N_BITS).into_trunc();
-            },
+            }
             _ => {
                 for i in 1..self.stride {
                     let tmp = val_abs >> (i * U::N_BITS);
@@ -560,8 +559,28 @@ mod tests {
         for i in 0..vec_ref.len() {
             assert_eq!(vec_ref[i], byte_vec.get(i));
         }
+        // Test extending from a slice
+        let slc = &[vec_ref[0], vec_ref[1], vec_ref[n - 1]];
+        vec_ref.extend_from_slice(slc);
+        byte_vec.extend_from_slice(slc);
+        let offset = vec_ref.len() - slc.len();
+        for i in 0..slc.len() {
+            assert_eq!(vec_ref.get(offset + i), slc[i]);
+            assert_eq!(byte_vec.get(offset + i), slc[i]);
+        }
+        // Test splitting off
+        let at = vec_ref.len() - slc.len();
+        let splt_ref = vec_ref.split_off(at);
+        let splt_byte_vec = byte_vec.split_off(at);
+        assert_eq!(splt_ref.len(), splt_byte_vec.len());
+        assert_eq!(vec_ref.len(), byte_vec.len());
+        for i in 0..slc.len() {
+            assert_eq!(splt_ref.get(i), slc[i]);
+            assert_eq!(splt_byte_vec.get(i), slc[i]);
+        }
+        // Test removing consecutive duplicate elements
     }
-    
+
     #[test]
     fn byte_vec_len_one_insert() {
         // Test inserting a value at index 0 and 1 for a Vec / ByteVec of length one.
@@ -940,7 +959,11 @@ mod tests {
         byte_vec_gen::<i128, u8>(1_000_000, 1_000_000, -5_000_000);
         byte_vec_gen::<i128, u8>(1_000_000, 400_000_000, -6_000_000);
         byte_vec_gen::<i128, u8>(1_000_000, 8_000_000_000, -7_000_000);
-        byte_vec_gen::<i128, u8>(1_000_000, 16_000_000_000_000_000_000, -8_000_000_000_000_000);
+        byte_vec_gen::<i128, u8>(
+            1_000_000,
+            16_000_000_000_000_000_000,
+            -8_000_000_000_000_000,
+        );
     }
 
     #[test]
@@ -963,7 +986,11 @@ mod tests {
         byte_vec_gen::<i128, u16>(1_000_000, 1_000_000, -5_000_000);
         byte_vec_gen::<i128, u16>(1_000_000, 400_000_000, -6_000_000);
         byte_vec_gen::<i128, u16>(1_000_000, 8_000_000_000, -7_000_000);
-        byte_vec_gen::<i128, u16>(1_000_000, 16_000_000_000_000_000_000, -8_000_000_000_000_000);
+        byte_vec_gen::<i128, u16>(
+            1_000_000,
+            16_000_000_000_000_000_000,
+            -8_000_000_000_000_000,
+        );
     }
 
     #[test]
@@ -986,7 +1013,11 @@ mod tests {
         byte_vec_gen::<i128, u32>(1_000_000, 1_000_000, -5_000_000);
         byte_vec_gen::<i128, u32>(1_000_000, 400_000_000, -6_000_000);
         byte_vec_gen::<i128, u32>(1_000_000, 8_000_000_000, -7_000_000);
-        byte_vec_gen::<i128, u32>(1_000_000, 16_000_000_000_000_000_000, -8_000_000_000_000_000);
+        byte_vec_gen::<i128, u32>(
+            1_000_000,
+            16_000_000_000_000_000_000,
+            -8_000_000_000_000_000,
+        );
     }
 
     #[test]
@@ -1009,7 +1040,11 @@ mod tests {
         byte_vec_gen::<i128, u64>(1_000_000, 1_000_000, -5_000_000);
         byte_vec_gen::<i128, u64>(1_000_000, 400_000_000, -6_000_000);
         byte_vec_gen::<i128, u64>(1_000_000, 8_000_000_000, -7_000_000);
-        byte_vec_gen::<i128, u64>(1_000_000, 16_000_000_000_000_000_000, -8_000_000_000_000_000);
+        byte_vec_gen::<i128, u64>(
+            1_000_000,
+            16_000_000_000_000_000_000,
+            -8_000_000_000_000_000,
+        );
     }
 
     #[test]

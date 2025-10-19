@@ -37,6 +37,14 @@ impl BoolVec {
         let pos_bit = i - pos_byte * 8;
         (pos_byte, pos_bit)
     }
+
+    fn set_byte_bit(&mut self, pos_byte: usize, pos_bit: usize, val: bool) {
+        if val == true {
+            self.bytes[pos_byte] |= Self::MASK_BIT[pos_bit];
+        } else {
+            self.bytes[pos_byte] &= Self::MASK_BIT_NEG[pos_bit];
+        }
+    }
 }
 
 impl VecLike for BoolVec {
@@ -57,11 +65,7 @@ impl VecLike for BoolVec {
 
     fn set(&mut self, i: usize, val: bool) {
         let (pos_byte, pos_bit) = Self::pos_byte_and_bit(i);
-        if val == true {
-            self.bytes[pos_byte] |= Self::MASK_BIT[pos_bit];
-        } else {
-            self.bytes[pos_byte] &= Self::MASK_BIT_NEG[pos_bit];
-        }
+        self.set_byte_bit(pos_byte, pos_bit, val);
     }
 
     fn len(&self) -> usize {
@@ -74,8 +78,8 @@ impl VecLike for BoolVec {
         if pos_byte >= self.bytes.len() {
             let byte_new = if val { 1u8 } else { 0u8 };
             self.bytes.push(byte_new);
-        } else if val == true {
-            self.bytes[pos_byte] |= Self::MASK_BIT[pos_bit];
+        } else {
+            self.set_byte_bit(pos_byte, pos_bit, val);
         }
     }
 
@@ -106,10 +110,10 @@ impl VecLike for BoolVec {
     }
 
     fn resize(&mut self, new_len: usize, value: bool) {
-        self.n_bools = new_len;
         if new_len < self.len() {
-            let len_bytes = new_len / 8;
+            let len_bytes = new_len / 8 + 1;
             self.bytes.resize(len_bytes, 0u8);
+            self.n_bools = new_len;
         } else {
             for _i in self.len()..new_len {
                 self.push(value);
@@ -187,6 +191,26 @@ mod tests {
         assert_eq!(vec_ref.len(), bool_vec.len());
         for i in 0..vec_ref.len() {
             assert_eq!(vec_ref[i], bool_vec.get(i));
+        }
+        // Test extending from a slice
+        let slc = &[vec_ref[0], vec_ref[1], vec_ref[N - 1]];
+        vec_ref.extend_from_slice(slc);
+        bool_vec.extend_from_slice(slc);
+        assert_eq!(vec_ref.len(), bool_vec.len());
+        let offset = vec_ref.len() - slc.len();
+        for i in 0..slc.len() {
+            assert_eq!(vec_ref.get(offset + i), slc[i]);
+            assert_eq!(bool_vec.get(offset + i), slc[i]);
+        }
+        // Test splitting off
+        let at = vec_ref.len() - slc.len();
+        let splt_ref = vec_ref.split_off(at);
+        let splt_bool_vec = bool_vec.split_off(at);
+        assert_eq!(splt_ref.len(), splt_bool_vec.len());
+        assert_eq!(vec_ref.len(), bool_vec.len());
+        for i in 0..slc.len() {
+            assert_eq!(splt_ref.get(i), slc[i]);
+            assert_eq!(splt_bool_vec.get(i), slc[i]);
         }
         // Pop until the containers are empty
         while !vec_ref.is_empty() {

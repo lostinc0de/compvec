@@ -20,7 +20,11 @@ impl<V: VecLike> BlockVec<V> {
     fn with_block_len(c: usize, len_block: usize) -> Self {
         let n_blocks = c / len_block + 1;
         let blocks = Vec::<V>::with_capacity(n_blocks);
-        Self { n: 0, len_block, blocks }
+        Self {
+            n: 0,
+            len_block,
+            blocks,
+        }
     }
 }
 
@@ -98,12 +102,14 @@ impl<V: VecLike> VecLike for BlockVec<V> {
         let res = new_len - n_blocks_new * self.len_block;
         if res > 0 {
             // We need an additional block for the remaining values
-            self.blocks.resize(n_blocks_new + 1, V::from(vec![value; self.len_block]));
+            self.blocks
+                .resize(n_blocks_new + 1, V::from(vec![value; self.len_block]));
             let ind_last_block = self.blocks.len() - 1;
             self.blocks[ind_last_block].resize(res, value);
         } else {
             // All values fit into the blocks
-            self.blocks.resize(n_blocks_new, V::from(vec![value; self.len_block]));
+            self.blocks
+                .resize(n_blocks_new, V::from(vec![value; self.len_block]));
         }
         self.n = new_len;
     }
@@ -129,12 +135,14 @@ impl<V: VecLike> VecLike for BlockVec<V> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bytevec::ByteVec;
     use crate::bitvec::BitVec;
+    use crate::bytevec::ByteVec;
     use crate::types::Integer;
 
-    fn block_vec_gen<V: VecLike>(n: usize, len_block: usize, mul: V::Type, offset: V::Type) 
-    where V::Type: Integer + From<u8> {
+    fn block_vec_gen<V: VecLike>(n: usize, len_block: usize, mul: V::Type, offset: V::Type)
+    where
+        V::Type: Integer + From<u8>,
+    {
         let mut block_vec = BlockVec::<V>::with_block_len(n, len_block);
         let mut vec_ref = vec![];
         for i in 0..n {
@@ -151,6 +159,25 @@ mod tests {
         assert_eq!(vec_ref.len(), block_vec.len());
         for i in 0..n {
             assert_eq!(vec_ref.get(i), block_vec.get(i));
+        }
+        // Test extending from a slice
+        let slc = &[vec_ref[0], vec_ref[1], vec_ref[n - 1]];
+        vec_ref.extend_from_slice(slc);
+        block_vec.extend_from_slice(slc);
+        let offset = vec_ref.len() - slc.len();
+        for i in 0..slc.len() {
+            assert_eq!(vec_ref.get(offset + i), slc[i]);
+            assert_eq!(block_vec.get(offset + i), slc[i]);
+        }
+        // Test splitting off
+        let at = vec_ref.len() - slc.len();
+        let splt_ref = vec_ref.split_off(at);
+        let splt_byte_vec = block_vec.split_off(at);
+        assert_eq!(splt_ref.len(), splt_byte_vec.len());
+        assert_eq!(vec_ref.len(), block_vec.len());
+        for i in 0..slc.len() {
+            assert_eq!(splt_ref.get(i), slc[i]);
+            assert_eq!(splt_byte_vec.get(i), slc[i]);
         }
     }
 

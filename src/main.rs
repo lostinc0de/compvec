@@ -1,6 +1,6 @@
+use compvec::bitvec::*;
 use compvec::boolvec::*;
 use compvec::bytevec::*;
-use compvec::bitvec::*;
 use compvec::types::*;
 use compvec::veclike::*;
 use std::time::SystemTime;
@@ -21,7 +21,10 @@ where
     println!("Every 4th {sum} {} ms", now.elapsed().unwrap().as_millis());
     let now = SystemTime::now();
     let sum = v.iterate().step_by(4).sum::<V::Type>();
-    println!("Every 4th iter {sum} {} ms", now.elapsed().unwrap().as_millis());
+    println!(
+        "Every 4th iter {sum} {} ms",
+        now.elapsed().unwrap().as_millis()
+    );
     let now = SystemTime::now();
     let sum = v.iterate().sum::<V::Type>();
     println!("All {sum} {} ms", now.elapsed().unwrap().as_millis());

@@ -1,8 +1,9 @@
+use std::cmp::PartialEq;
 use std::fmt::Display;
 
 /// Defines functionality for an object, which behaves almost like a Vec.
 pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
-    type Type: Copy + Default + Display;
+    type Type: Copy + Default + Display + PartialEq;
 
     /// Creates a vector like object with capacity.
     fn with_capacity(c: usize) -> Self;
@@ -20,7 +21,7 @@ pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
 
     /// Returns the number of stored objects.
     fn len(&self) -> usize;
-    
+
     /// Checks, if the container is empty.
     fn is_empty(&self) -> bool {
         self.len() == 0
@@ -98,20 +99,73 @@ pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
 
     /// Resizes the vector to a given length.
     fn resize(&mut self, new_len: usize, value: Self::Type);
-    
+
     /// Truncates the vector to len.
     fn truncate(&mut self, len: usize) {
         if len < self.len() {
             self.resize(len, Self::Type::default());
         }
     }
-    
+
     /// Reserves additional space for push values.
     fn reserve(&mut self, additional: usize);
+
+    /// Appends all elements from the slice.
+    fn extend_from_slice(&mut self, other: &[Self::Type]) {
+        for &v in other.iter() {
+            self.push(v);
+        }
+    }
+
+    /// Removes consecutive duplicates.
+    fn dedup(&mut self) {
+        let len = self.len();
+        if len > 0 {
+            let mut v = Self::with_capacity(len / 2);
+            let mut prev = self.get(0);
+            for i in 1..len {
+                let val = self.get(i);
+                if val != prev {
+                    v.push(val);
+                    prev = val;
+                }
+            }
+            *self = v;
+        }
+    }
+
+    /// Swaps the last element with index and resizes vec.
+    /// Returns the removed element at index.
+    fn swap_remove(&mut self, index: usize) -> Self::Type {
+        let len = self.len();
+        if index >= len {
+            panic!("swap_remove index (is {index}) should be < len (is {len})");
+        }
+        let last = self.get(len - 1);
+        let ret = self.get(index);
+        self.set(index, last);
+        self.resize(len - 1, Self::Type::default());
+        return ret;
+    }
+
+    /// Splits the collection into two at the given index.
+    fn split_off(&mut self, at: usize) -> Self {
+        let len = self.len();
+        if at >= len {
+            panic!("`at` split index (is {at}) should be <= len (is {len})");
+        }
+        let mut ret = Self::with_capacity(len - at);
+        for i in at..len {
+            let val = self.get(i);
+            ret.push(val);
+        }
+        self.resize(at, Self::Type::default());
+        ret
+    }
 }
 
 /// Implement VecLike for Vec in the std-lib.
-impl<T: Copy + Default + Display> VecLike for Vec<T> {
+impl<T: Copy + Default + Display + PartialEq> VecLike for Vec<T> {
     type Type = T;
 
     fn with_capacity(c: usize) -> Self {
@@ -167,5 +221,20 @@ impl<T: Copy + Default + Display> VecLike for Vec<T> {
 
     fn reserve(&mut self, additional: usize) {
         self.reserve(additional);
+    }
+
+    // Overwrite implementation of VecLike.
+    fn extend_from_slice(&mut self, other: &[Self::Type]) {
+        self.extend_from_slice(other);
+    }
+
+    // Overwrite implementation of VecLike.
+    //fn dedup(&mut self) {
+    //    self.dedup();
+    //}
+
+    // Overwrite implementation of VecLike.
+    fn swap_remove(&mut self, index: usize) -> Self::Type {
+        self.swap_remove(index)
     }
 }
