@@ -243,7 +243,7 @@ where
         None
     }
 
-    fn iterate(&self) -> impl Iterator<Item = T> {
+    fn iter_values(&self) -> impl Iterator<Item = T> {
         (0..self.n).map(|i| self.get(i))
     }
 
@@ -303,8 +303,8 @@ mod tests {
             assert_eq!(bit_vec.get(i), vec_ref.get(i));
         }
         // Test iterator
-        assert_eq!(bit_vec.iterate().max(), vec_ref.iterate().max());
-        for (v0, v1) in bit_vec.iterate().zip(vec_ref.iterate()) {
+        assert_eq!(bit_vec.iter_values().max(), vec_ref.iter_values().max());
+        for (v0, v1) in bit_vec.iter_values().zip(vec_ref.iter_values()) {
             assert_eq!(v0, v1);
         }
         // Test pushing values
@@ -353,6 +353,16 @@ mod tests {
             assert_eq!(splt_ref.get(i), slc[i]);
             assert_eq!(splt_byte_vec.get(i), slc[i]);
         }
+        // Test removing consecutive duplicate elements
+        let slc = &[vec_ref[0], vec_ref[0], vec_ref[0], vec_ref[1]];
+        vec_ref.extend_from_slice(slc);
+        bit_vec.extend_from_slice(slc);
+        vec_ref.dedup();
+        bit_vec.dedup();
+        assert_eq!(vec_ref.len(), bit_vec.len());
+        assert_eq!(vec_ref[vec_ref.len() - 3], bit_vec.get(bit_vec.len() - 3));
+        assert_eq!(vec_ref[vec_ref.len() - 2], bit_vec.get(bit_vec.len() - 2));
+        assert_eq!(vec_ref[vec_ref.len() - 1], bit_vec.get(bit_vec.len() - 1));
     }
 
     #[test]

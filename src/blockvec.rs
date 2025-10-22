@@ -88,8 +88,8 @@ impl<V: VecLike> VecLike for BlockVec<V> {
         None
     }
 
-    fn iterate(&self) -> impl Iterator<Item = Self::Type> {
-        self.blocks.iter().map(|v| v.iterate()).flatten()
+    fn iter_values(&self) -> impl Iterator<Item = Self::Type> {
+        self.blocks.iter().map(|v| v.iter_values()).flatten()
     }
 
     fn clear(&mut self) {
@@ -179,6 +179,16 @@ mod tests {
             assert_eq!(splt_ref.get(i), slc[i]);
             assert_eq!(splt_byte_vec.get(i), slc[i]);
         }
+        // Test removing consecutive duplicate elements
+        let slc = &[vec_ref[0], vec_ref[0], vec_ref[0], vec_ref[1]];
+        vec_ref.extend_from_slice(slc);
+        block_vec.extend_from_slice(slc);
+        vec_ref.dedup();
+        block_vec.dedup();
+        assert_eq!(vec_ref.len(), block_vec.len());
+        assert_eq!(vec_ref[vec_ref.len() - 3], block_vec.get(block_vec.len() - 3));
+        assert_eq!(vec_ref[vec_ref.len() - 2], block_vec.get(block_vec.len() - 2));
+        assert_eq!(vec_ref[vec_ref.len() - 1], block_vec.get(block_vec.len() - 1));
     }
 
     #[test]

@@ -39,7 +39,7 @@ where
     fn check_and_resize(&mut self, val: T) {
         if val.abs() > self.max {
             let mut cop = Self::with_max_value(self.len(), val);
-            for v in self.iterate() {
+            for v in self.iter_values() {
                 cop.push(v);
             }
             *self = cop;
@@ -468,7 +468,7 @@ where
         None
     }
 
-    fn iterate(&self) -> impl Iterator<Item = T> {
+    fn iter_values(&self) -> impl Iterator<Item = T> {
         (0..self.n).map(|i| self.get(i))
     }
 
@@ -529,8 +529,8 @@ mod tests {
             assert_eq!(vec_ref[i], byte_vec.get(i));
         }
         // Test iterator
-        assert_eq!(byte_vec.iterate().max(), vec_ref.iterate().max());
-        for (v0, v1) in byte_vec.iterate().zip(vec_ref.iterate()) {
+        assert_eq!(byte_vec.iter_values().max(), vec_ref.iter_values().max());
+        for (v0, v1) in byte_vec.iter_values().zip(vec_ref.iter_values()) {
             assert_eq!(v0, v1);
         }
         // Test by pushing values
@@ -579,6 +579,15 @@ mod tests {
             assert_eq!(splt_byte_vec.get(i), slc[i]);
         }
         // Test removing consecutive duplicate elements
+        let slc = &[vec_ref[0], vec_ref[0], vec_ref[0], vec_ref[1]];
+        vec_ref.extend_from_slice(slc);
+        byte_vec.extend_from_slice(slc);
+        vec_ref.dedup();
+        byte_vec.dedup();
+        assert_eq!(vec_ref.len(), byte_vec.len());
+        assert_eq!(vec_ref[vec_ref.len() - 3], byte_vec.get(byte_vec.len() - 3));
+        assert_eq!(vec_ref[vec_ref.len() - 2], byte_vec.get(byte_vec.len() - 2));
+        assert_eq!(vec_ref[vec_ref.len() - 1], byte_vec.get(byte_vec.len() - 1));
     }
 
     #[test]

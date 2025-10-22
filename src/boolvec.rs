@@ -100,7 +100,7 @@ impl VecLike for BoolVec {
         None
     }
 
-    fn iterate(&self) -> impl Iterator<Item = bool> {
+    fn iter_values(&self) -> impl Iterator<Item = bool> {
         (0..self.n_bools).map(|i| self.get(i))
     }
 
@@ -212,6 +212,16 @@ mod tests {
             assert_eq!(splt_ref.get(i), slc[i]);
             assert_eq!(splt_bool_vec.get(i), slc[i]);
         }
+        // Test removing consecutive duplicate elements
+        let slc = &[vec_ref[0], vec_ref[0], vec_ref[0], vec_ref[1]];
+        vec_ref.extend_from_slice(slc);
+        bool_vec.extend_from_slice(slc);
+        vec_ref.dedup();
+        bool_vec.dedup();
+        assert_eq!(vec_ref.len(), bool_vec.len());
+        assert_eq!(vec_ref[vec_ref.len() - 3], bool_vec.get(bool_vec.len() - 3));
+        assert_eq!(vec_ref[vec_ref.len() - 2], bool_vec.get(bool_vec.len() - 2));
+        assert_eq!(vec_ref[vec_ref.len() - 1], bool_vec.get(bool_vec.len() - 1));
         // Pop until the containers are empty
         while !vec_ref.is_empty() {
             assert_eq!(vec_ref.pop(), bool_vec.pop());

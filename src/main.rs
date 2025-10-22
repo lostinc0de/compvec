@@ -20,13 +20,13 @@ where
     }
     println!("Every 4th {sum} {} ms", now.elapsed().unwrap().as_millis());
     let now = SystemTime::now();
-    let sum = v.iterate().step_by(4).sum::<V::Type>();
+    let sum = v.iter_values().step_by(4).sum::<V::Type>();
     println!(
         "Every 4th iter {sum} {} ms",
         now.elapsed().unwrap().as_millis()
     );
     let now = SystemTime::now();
-    let sum = v.iterate().sum::<V::Type>();
+    let sum = v.iter_values().sum::<V::Type>();
     println!("All {sum} {} ms", now.elapsed().unwrap().as_millis());
 }
 
@@ -42,7 +42,7 @@ fn main() {
         let sum = bool_vec_ref.iter().filter(|&&x| x).count();
         println!("Vec<bool> {sum} {} ms", now.elapsed().unwrap().as_millis());
         let now = SystemTime::now();
-        let sum = bool_vec.iterate().filter(|&x| x).count();
+        let sum = bool_vec.iter_values().filter(|&x| x).count();
         println!("BoolVec {sum} {} ms", now.elapsed().unwrap().as_millis());
     }
     {

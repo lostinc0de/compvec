@@ -34,11 +34,11 @@ pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
     fn pop(&mut self) -> Option<Self::Type>;
 
     /// Returns an iterator over all values.
-    fn iterate(&self) -> impl Iterator<Item = Self::Type>;
+    fn iter_values(&self) -> impl Iterator<Item = Self::Type>;
 
     /// Moves all elements from another Vec-like structure.
     fn append(&mut self, other: &mut Self) {
-        for v in other.iterate() {
+        for v in other.iter_values() {
             self.push(v);
         }
         other.clear();
@@ -121,16 +121,32 @@ pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
     fn dedup(&mut self) {
         let len = self.len();
         if len > 0 {
-            let mut v = Self::with_capacity(len / 2);
-            let mut prev = self.get(0);
-            for i in 1..len {
-                let val = self.get(i);
-                if val != prev {
-                    v.push(val);
-                    prev = val;
+            // First check if there are any duplicates
+            let has_duplicates = {
+                let mut ret = false;
+                for i in 1..len {
+                    let prev = self.get(i - 1);
+                    let val = self.get(i);
+                    if val == prev {
+                        ret = true;
+                        break;
+                    }
                 }
+                ret
+            };
+            // Rebuild the vec if necessary
+            if has_duplicates {
+                let mut v = Self::with_capacity(len / 2);
+                v.push(self.get(0));
+                for i in 1..len {
+                    let prev = self.get(i - 1);
+                    let val = self.get(i);
+                    if val != prev {
+                        v.push(val);
+                    }
+                }
+                *self = v;
             }
-            *self = v;
         }
     }
 
@@ -192,7 +208,7 @@ impl<T: Copy + Default + Display + PartialEq> VecLike for Vec<T> {
         self.pop()
     }
 
-    fn iterate(&self) -> impl Iterator<Item = T> {
+    fn iter_values(&self) -> impl Iterator<Item = T> {
         self.iter().cloned()
     }
 
