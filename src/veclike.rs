@@ -107,7 +107,7 @@ pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
         }
     }
 
-    /// Reserves additional space for push values.
+    /// Reserves additional space for pushing values.
     fn reserve(&mut self, additional: usize);
 
     /// Appends all elements from the slice.
@@ -245,9 +245,9 @@ impl<T: Copy + Default + Display + PartialEq> VecLike for Vec<T> {
     }
 
     // Overwrite implementation of VecLike.
-    //fn dedup(&mut self) {
-    //    self.dedup();
-    //}
+    fn dedup(&mut self) {
+        self.dedup();
+    }
 
     // Overwrite implementation of VecLike.
     fn swap_remove(&mut self, index: usize) -> Self::Type {

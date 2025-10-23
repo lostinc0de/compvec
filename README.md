@@ -69,6 +69,18 @@ println!("{}", boolvec.get(4));
 ```
 
 ## Notes
+### Iterators
+There is no way to iterate over the integers by reference or mutably, since they are stored compressed.
+But you can use the function *iter_values* for iterating over the integer values.
+
+```rust
+let bytevec = ByteVec::<u32, u8>::from(vec![32, 64, 999, 5_000]);
+// Prints values 32, 64, 999 and 5000
+for v in bytevec.iter_values() {
+    println!("{v}");
+}
+```
+
 ### A word on bitpacking
 Using the crate *bitpacking* you can compress a sequence of 32 bit unsigned integers into bytes efficiently with SIMD. I was looking for a generic solution for storing any type of signed and unsigned integers. *compvec* accomplishes that in a simple way.
 Sure, one could use a wrapper, such that any integer type is first encoded into a Vec of u32. But I don't think it's applicable.
