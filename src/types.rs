@@ -44,11 +44,10 @@ where
 
     /// Checks, if the integer is negative.
     fn is_neg(&self) -> bool {
-        if Self::SIGNED {
-            if *self < Self::ZERO {
+        if Self::SIGNED
+            && *self < Self::ZERO {
                 return true;
             }
-        }
         false
     }
 

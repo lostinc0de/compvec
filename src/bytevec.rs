@@ -97,163 +97,163 @@ where
             3 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
             }
             4 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
             }
             5 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
             }
             6 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
             }
             7 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
             }
             8 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
             }
             9 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 8]) << 8 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 8]) << (8 * U::N_BITS))
             }
             10 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 8]) << 8 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 9]) << 9 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 8]) << (8 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 9]) << (9 * U::N_BITS))
             }
             11 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 8]) << 8 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 9]) << 9 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 10]) << 10 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 8]) << (8 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 9]) << (9 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 10]) << (10 * U::N_BITS))
             }
             12 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 8]) << 8 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 9]) << 9 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 10]) << 10 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 11]) << 11 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 8]) << (8 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 9]) << (9 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 10]) << (10 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 11]) << (11 * U::N_BITS))
             }
             13 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 8]) << 8 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 9]) << 9 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 10]) << 10 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 11]) << 11 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 12]) << 12 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 8]) << (8 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 9]) << (9 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 10]) << (10 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 11]) << (11 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 12]) << (12 * U::N_BITS))
             }
             14 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 8]) << 8 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 9]) << 9 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 10]) << 10 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 11]) << 11 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 12]) << 12 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 13]) << 13 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 8]) << (8 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 9]) << (9 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 10]) << (10 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 11]) << (11 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 12]) << (12 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 13]) << (13 * U::N_BITS))
             }
             15 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 8]) << 8 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 9]) << 9 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 10]) << 10 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 11]) << 11 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 12]) << 12 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 13]) << 13 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 14]) << 14 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 8]) << (8 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 9]) << (9 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 10]) << (10 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 11]) << (11 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 12]) << (12 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 13]) << (13 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 14]) << (14 * U::N_BITS))
             }
             16 => {
                 T::from_trunc(self.values[start])
                     | (T::from_trunc(self.values[start + 1]) << U::N_BITS)
-                    | (T::from_trunc(self.values[start + 2]) << 2 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 3]) << 3 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 4]) << 4 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 5]) << 5 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 6]) << 6 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 7]) << 7 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 8]) << 8 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 9]) << 9 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 10]) << 10 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 11]) << 11 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 12]) << 12 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 13]) << 13 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 14]) << 14 * U::N_BITS)
-                    | (T::from_trunc(self.values[start + 15]) << 15 * U::N_BITS)
+                    | (T::from_trunc(self.values[start + 2]) << (2 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 3]) << (3 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 4]) << (4 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 5]) << (5 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 6]) << (6 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 7]) << (7 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 8]) << (8 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 9]) << (9 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 10]) << (10 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 11]) << (11 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 12]) << (12 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 13]) << (13 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 14]) << (14 * U::N_BITS))
+                    | (T::from_trunc(self.values[start + 15]) << (15 * U::N_BITS))
             }
             _ => {
                 let mut ret = T::from_trunc(self.values[start]);
@@ -288,150 +288,150 @@ where
             }
             3 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
             }
             4 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
             }
             5 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
             }
             6 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
             }
             7 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
             }
             8 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
             }
             9 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
+                self.values[start + 8] = (val_abs >> (8 * U::N_BITS)).into_trunc();
             }
             10 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
+                self.values[start + 8] = (val_abs >> (8 * U::N_BITS)).into_trunc();
+                self.values[start + 9] = (val_abs >> (9 * U::N_BITS)).into_trunc();
             }
             11 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
+                self.values[start + 8] = (val_abs >> (8 * U::N_BITS)).into_trunc();
+                self.values[start + 9] = (val_abs >> (9 * U::N_BITS)).into_trunc();
+                self.values[start + 10] = (val_abs >> (10 * U::N_BITS)).into_trunc();
             }
             12 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
+                self.values[start + 8] = (val_abs >> (8 * U::N_BITS)).into_trunc();
+                self.values[start + 9] = (val_abs >> (9 * U::N_BITS)).into_trunc();
+                self.values[start + 10] = (val_abs >> (10 * U::N_BITS)).into_trunc();
+                self.values[start + 11] = (val_abs >> (11 * U::N_BITS)).into_trunc();
             }
             13 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
-                self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
+                self.values[start + 8] = (val_abs >> (8 * U::N_BITS)).into_trunc();
+                self.values[start + 9] = (val_abs >> (9 * U::N_BITS)).into_trunc();
+                self.values[start + 10] = (val_abs >> (10 * U::N_BITS)).into_trunc();
+                self.values[start + 11] = (val_abs >> (11 * U::N_BITS)).into_trunc();
+                self.values[start + 12] = (val_abs >> (12 * U::N_BITS)).into_trunc();
             }
             14 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
-                self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
-                self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
+                self.values[start + 8] = (val_abs >> (8 * U::N_BITS)).into_trunc();
+                self.values[start + 9] = (val_abs >> (9 * U::N_BITS)).into_trunc();
+                self.values[start + 10] = (val_abs >> (10 * U::N_BITS)).into_trunc();
+                self.values[start + 11] = (val_abs >> (11 * U::N_BITS)).into_trunc();
+                self.values[start + 12] = (val_abs >> (12 * U::N_BITS)).into_trunc();
+                self.values[start + 13] = (val_abs >> (13 * U::N_BITS)).into_trunc();
             }
             15 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
-                self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
-                self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
-                self.values[start + 14] = (val_abs >> 14 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
+                self.values[start + 8] = (val_abs >> (8 * U::N_BITS)).into_trunc();
+                self.values[start + 9] = (val_abs >> (9 * U::N_BITS)).into_trunc();
+                self.values[start + 10] = (val_abs >> (10 * U::N_BITS)).into_trunc();
+                self.values[start + 11] = (val_abs >> (11 * U::N_BITS)).into_trunc();
+                self.values[start + 12] = (val_abs >> (12 * U::N_BITS)).into_trunc();
+                self.values[start + 13] = (val_abs >> (13 * U::N_BITS)).into_trunc();
+                self.values[start + 14] = (val_abs >> (14 * U::N_BITS)).into_trunc();
             }
             16 => {
                 self.values[start + 1] = (val_abs >> U::N_BITS).into_trunc();
-                self.values[start + 2] = (val_abs >> 2 * U::N_BITS).into_trunc();
-                self.values[start + 3] = (val_abs >> 3 * U::N_BITS).into_trunc();
-                self.values[start + 4] = (val_abs >> 4 * U::N_BITS).into_trunc();
-                self.values[start + 5] = (val_abs >> 5 * U::N_BITS).into_trunc();
-                self.values[start + 6] = (val_abs >> 6 * U::N_BITS).into_trunc();
-                self.values[start + 7] = (val_abs >> 7 * U::N_BITS).into_trunc();
-                self.values[start + 8] = (val_abs >> 8 * U::N_BITS).into_trunc();
-                self.values[start + 9] = (val_abs >> 9 * U::N_BITS).into_trunc();
-                self.values[start + 10] = (val_abs >> 10 * U::N_BITS).into_trunc();
-                self.values[start + 11] = (val_abs >> 11 * U::N_BITS).into_trunc();
-                self.values[start + 12] = (val_abs >> 12 * U::N_BITS).into_trunc();
-                self.values[start + 13] = (val_abs >> 13 * U::N_BITS).into_trunc();
-                self.values[start + 14] = (val_abs >> 14 * U::N_BITS).into_trunc();
-                self.values[start + 15] = (val_abs >> 15 * U::N_BITS).into_trunc();
+                self.values[start + 2] = (val_abs >> (2 * U::N_BITS)).into_trunc();
+                self.values[start + 3] = (val_abs >> (3 * U::N_BITS)).into_trunc();
+                self.values[start + 4] = (val_abs >> (4 * U::N_BITS)).into_trunc();
+                self.values[start + 5] = (val_abs >> (5 * U::N_BITS)).into_trunc();
+                self.values[start + 6] = (val_abs >> (6 * U::N_BITS)).into_trunc();
+                self.values[start + 7] = (val_abs >> (7 * U::N_BITS)).into_trunc();
+                self.values[start + 8] = (val_abs >> (8 * U::N_BITS)).into_trunc();
+                self.values[start + 9] = (val_abs >> (9 * U::N_BITS)).into_trunc();
+                self.values[start + 10] = (val_abs >> (10 * U::N_BITS)).into_trunc();
+                self.values[start + 11] = (val_abs >> (11 * U::N_BITS)).into_trunc();
+                self.values[start + 12] = (val_abs >> (12 * U::N_BITS)).into_trunc();
+                self.values[start + 13] = (val_abs >> (13 * U::N_BITS)).into_trunc();
+                self.values[start + 14] = (val_abs >> (14 * U::N_BITS)).into_trunc();
+                self.values[start + 15] = (val_abs >> (15 * U::N_BITS)).into_trunc();
             }
             _ => {
                 for i in 1..self.stride {
@@ -440,11 +440,10 @@ where
                 }
             }
         }
-        if T::SIGNED {
-            if val.is_neg() {
+        if T::SIGNED
+            && val.is_neg() {
                 self.values[start + self.stride - 1] |= U::ONE << (U::N_BITS - 1);
             }
-        }
     }
 
     fn len(&self) -> usize {

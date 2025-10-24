@@ -60,7 +60,7 @@ impl<V: VecLike> VecLike for BlockVec<V> {
     }
 
     fn push(&mut self, val: Self::Type) {
-        if self.blocks.len() == 0 {
+        if self.blocks.is_empty() {
             self.blocks.push(V::with_capacity(self.len_block));
         }
         let ind_last_block = {
@@ -89,7 +89,7 @@ impl<V: VecLike> VecLike for BlockVec<V> {
     }
 
     fn iter_values(&self) -> impl Iterator<Item = Self::Type> {
-        self.blocks.iter().map(|v| v.iter_values()).flatten()
+        self.blocks.iter().flat_map(|v| v.iter_values())
     }
 
     fn clear(&mut self) {

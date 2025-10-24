@@ -213,11 +213,10 @@ where
             self.values[end_el] |= (val_abs >> shift).into_trunc();
         }
         // Set a one for a negative sign at the last bit
-        if T::SIGNED {
-            if val.is_neg() {
+        if T::SIGNED
+            && val.is_neg() {
                 self.values[end_el] |= U::ONE << end_bit;
             }
-        }
     }
 
     fn push(&mut self, val: T) {

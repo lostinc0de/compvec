@@ -39,7 +39,7 @@ impl BoolVec {
     }
 
     fn set_byte_bit(&mut self, pos_byte: usize, pos_bit: usize, val: bool) {
-        if val == true {
+        if val {
             self.bytes[pos_byte] |= Self::MASK_BIT[pos_bit];
         } else {
             self.bytes[pos_byte] &= Self::MASK_BIT_NEG[pos_bit];
