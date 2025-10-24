@@ -161,7 +161,7 @@ pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
         let ret = self.get(index);
         self.set(index, last);
         self.resize(len - 1, Self::Type::default());
-        return ret;
+        ret
     }
 
     /// Splits the collection into two at the given index.

@@ -46,7 +46,7 @@ where
             let (max_new, stride_new) = Self::compute_max_value_and_stride(val);
             let cloned = self.clone();
             self.max = max_new;
-            self.stride_bits = stride_new as u64;
+            self.stride_bits = stride_new;
             let last_bit_global = (self.n as u64 + 1) * self.stride_bits - 1;
             let n_values_new = last_bit_global / U::N_BITS_U64 + 1;
             self.values.resize(n_values_new as usize, U::ZERO);

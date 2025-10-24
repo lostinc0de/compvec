@@ -66,7 +66,7 @@ where
         if Self::SIGNED {
             return !(*self - Self::ONE);
         }
-        return *self;
+        *self
     }
 }
 
@@ -105,11 +105,11 @@ where
     Self: Sized,
 {
     /// Cast self into a smaller truncated integer type.
-    fn into_trunc(&self) -> U;
+    fn into_trunc(self) -> U;
 
     /// Safe version of into_trunc().
     /// Returns None if the bigger integer would be sliced.
-    fn into_trunc_safe(&self) -> Result<U, CompVecError>;
+    fn into_trunc_safe(self) -> Result<U, CompVecError>;
 }
 
 /// Trait for converting a smaller integer type into a larger one
@@ -130,20 +130,20 @@ where
 macro_rules! trunc_conv {
     ($t: ty, $u: ty) => {
         impl IntoTruncated<$u> for $t {
-            fn into_trunc(&self) -> $u {
-                *self as $u
+            fn into_trunc(self) -> $u {
+                self as $u
             }
 
-            fn into_trunc_safe(&self) -> Result<$u, CompVecError> {
+            fn into_trunc_safe(self) -> Result<$u, CompVecError> {
                 if <$u>::MAX_U64 > <$t>::MAX_U64 {
                     let msg = String::from("Truncated type should be smaller");
                     return Err(CompVecError::ConversionError(msg));
                 }
-                if *self > <$u>::MAX as $t {
+                if self > <$u>::MAX as $t {
                     let msg = String::from("Destination type is too small");
                     return Err(CompVecError::ConversionError(msg));
                 }
-                Ok(*self as $u)
+                Ok(self as $u)
             }
         }
 
