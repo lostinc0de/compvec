@@ -587,6 +587,17 @@ mod tests {
         assert_eq!(vec_ref[vec_ref.len() - 3], byte_vec.get(byte_vec.len() - 3));
         assert_eq!(vec_ref[vec_ref.len() - 2], byte_vec.get(byte_vec.len() - 2));
         assert_eq!(vec_ref[vec_ref.len() - 1], byte_vec.get(byte_vec.len() - 1));
+        // Test swap remove
+        vec_ref.swap_remove(n / 2);
+        byte_vec.swap_remove(n / 2);
+        vec_ref.swap_remove(n / 4);
+        byte_vec.swap_remove(n / 4);
+        vec_ref.swap_remove(n / 6 + 1);
+        byte_vec.swap_remove(n / 6 + 1);
+        assert_eq!(vec_ref.len(), byte_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], byte_vec.get(i));
+        }
     }
 
     #[test]

@@ -189,6 +189,17 @@ mod tests {
         assert_eq!(vec_ref[vec_ref.len() - 3], block_vec.get(block_vec.len() - 3));
         assert_eq!(vec_ref[vec_ref.len() - 2], block_vec.get(block_vec.len() - 2));
         assert_eq!(vec_ref[vec_ref.len() - 1], block_vec.get(block_vec.len() - 1));
+        // Test swap remove
+        vec_ref.swap_remove(n / 2);
+        block_vec.swap_remove(n / 2);
+        vec_ref.swap_remove(n / 4);
+        block_vec.swap_remove(n / 4);
+        vec_ref.swap_remove(n / 6 + 1);
+        block_vec.swap_remove(n / 6 + 1);
+        assert_eq!(vec_ref.len(), block_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], block_vec.get(i));
+        }
     }
 
     #[test]

@@ -222,6 +222,17 @@ mod tests {
         assert_eq!(vec_ref[vec_ref.len() - 3], bool_vec.get(bool_vec.len() - 3));
         assert_eq!(vec_ref[vec_ref.len() - 2], bool_vec.get(bool_vec.len() - 2));
         assert_eq!(vec_ref[vec_ref.len() - 1], bool_vec.get(bool_vec.len() - 1));
+        // Test swap remove
+        vec_ref.swap_remove(N / 2);
+        bool_vec.swap_remove(N / 2);
+        vec_ref.swap_remove(N / 4);
+        bool_vec.swap_remove(N / 4);
+        vec_ref.swap_remove(N / 6 + 1);
+        bool_vec.swap_remove(N / 6 + 1);
+        assert_eq!(vec_ref.len(), bool_vec.len());
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], bool_vec.get(i));
+        }
         // Pop until the containers are empty
         while !vec_ref.is_empty() {
             assert_eq!(vec_ref.pop(), bool_vec.pop());
