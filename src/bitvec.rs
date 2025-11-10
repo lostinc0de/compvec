@@ -213,10 +213,9 @@ where
             self.values[end_el] |= (val_abs >> shift).into_trunc();
         }
         // Set a one for a negative sign at the last bit
-        if T::SIGNED
-            && val.is_neg() {
-                self.values[end_el] |= U::ONE << end_bit;
-            }
+        if T::SIGNED && val.is_neg() {
+            self.values[end_el] |= U::ONE << end_bit;
+        }
     }
 
     fn push(&mut self, val: T) {
@@ -353,15 +352,18 @@ mod tests {
             assert_eq!(splt_byte_vec.get(i), slc[i]);
         }
         // Test removing consecutive duplicate elements
-        let slc = &[vec_ref[0], vec_ref[0], vec_ref[0], vec_ref[1]];
+        let slc = &[
+            vec_ref[0], vec_ref[0], vec_ref[0], vec_ref[1], vec_ref[0], vec_ref[2], vec_ref[3],
+            vec_ref[3], vec_ref[0], vec_ref[1], vec_ref[2], vec_ref[1], vec_ref[1], vec_ref[0], 
+        ];
         vec_ref.extend_from_slice(slc);
         bit_vec.extend_from_slice(slc);
         vec_ref.dedup();
         bit_vec.dedup();
         assert_eq!(vec_ref.len(), bit_vec.len());
-        assert_eq!(vec_ref[vec_ref.len() - 3], bit_vec.get(bit_vec.len() - 3));
-        assert_eq!(vec_ref[vec_ref.len() - 2], bit_vec.get(bit_vec.len() - 2));
-        assert_eq!(vec_ref[vec_ref.len() - 1], bit_vec.get(bit_vec.len() - 1));
+        for i in 0..vec_ref.len() {
+            assert_eq!(vec_ref[i], bit_vec.get(i));
+        }
         // Test swap remove
         vec_ref.swap_remove(n / 2);
         bit_vec.swap_remove(n / 2);
