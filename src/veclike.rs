@@ -1,3 +1,4 @@
+use crate::error::CompVecError;
 use std::cmp::PartialEq;
 use std::fmt::Display;
 
@@ -21,6 +22,27 @@ pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
 
     /// Returns the number of stored objects.
     fn len(&self) -> usize;
+
+    /// Returns entry at position i as value with bounds check beforehand.
+    fn get_checked(&self, i: usize) -> Result<Self::Type, CompVecError> {
+        let len = self.len();
+        if i >= self.len() {
+            let msg = format!("Length is {len} but index is {i}");
+            return Err(CompVecError::OutOfBoundsError(msg));
+        }
+        Ok(self.get(i))
+    }
+
+    /// Sets entry at position i with value val with bounds check beforehand.
+    fn set_checked(&mut self, i: usize, val: Self::Type) -> Result<(), CompVecError> {
+        let len = self.len();
+        if i >= self.len() {
+            let msg = format!("Length is {len} but index is {i}");
+            return Err(CompVecError::OutOfBoundsError(msg));
+        }
+        self.set(i, val);
+        Ok(())
+    }
 
     /// Checks, if the container is empty.
     fn is_empty(&self) -> bool {
@@ -119,34 +141,24 @@ pub trait VecLike: Sized + From<Vec<Self::Type>> + Clone {
 
     /// Removes consecutive duplicates.
     fn dedup(&mut self) {
+        // Shift all values to the left, if there are any duplicates
         let len = self.len();
-        if len > 0 {
-            // First check if there are any duplicates
-            let has_duplicates = {
-                let mut ret = false;
-                for i in 1..len {
-                    let prev = self.get(i - 1);
-                    let val = self.get(i);
-                    if val == prev {
-                        ret = true;
-                        break;
-                    }
+        if len > 1 {
+            let mut shift_left = 0;
+            for i in 1..len {
+                let prev = self.get(i - 1);
+                let val = self.get(i);
+                if val == prev {
+                    shift_left += 1;
+                } else if shift_left > 0 {
+                    let ind_left = i - 1 - shift_left;
+                    self.set(ind_left, prev);
                 }
-                ret
-            };
-            // Rebuild the vec if necessary
-            if has_duplicates {
-                let mut v = Self::with_capacity(len / 2);
-                v.push(self.get(0));
-                for i in 1..len {
-                    let prev = self.get(i - 1);
-                    let val = self.get(i);
-                    if val != prev {
-                        v.push(val);
-                    }
-                }
-                *self = v;
             }
+            // Shift the last value
+            let val = self.get(len - 1);
+            self.set(len - 1 - shift_left, val);
+            self.resize(len - shift_left, Self::Type::default());
         }
     }
 
